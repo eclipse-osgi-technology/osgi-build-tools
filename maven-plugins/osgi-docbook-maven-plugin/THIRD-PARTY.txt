@@ -1,0 +1,10 @@
+Lists of 3rd party dependencies included directly in source
+
+
+(DocBook XML License)
+
+    * Docbook XSL transforms (Content under src/main/resources/docbook/docbook-xsl - http://sourceforge.net/projects/docbook/)
+
+(Public Domain)
+
+    * OFFO English Hyphenation Patterns (src/main/resources/docbook/fop/hyph/en.hyp - http://offo.sourceforge.net/)
