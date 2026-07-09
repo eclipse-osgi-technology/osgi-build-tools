@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.eclipse.osgi-technology.build.tools</groupId>
+	<artifactId>reactor</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>Eclipse OSGi Technology Build Tools</name>
+	<description>Reactor POM for the OSGi Technology project build tools (not deployed)</description>
+
+	<properties>
+		<!-- DO NOT DEPLOY this is just a convenience reactor -->
+		<maven.deploy.skip>true</maven.deploy.skip>
+		<skipPublishing>true</skipPublishing>
+		<!-- Set UTF-8 encoding -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<modules>
+		<module>parent</module>
+		<module>maven-plugins</module>
+	</modules>	
+</project>
