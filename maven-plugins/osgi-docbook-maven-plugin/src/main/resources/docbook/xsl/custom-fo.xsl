@@ -22,7 +22,7 @@ parent::d:tasksummary|parent::d:warning|parent::d:topic">
   exclude-result-prefixes="exsl"
   version="1.0">
 
-<xsl:import href="../../../licensed/docbook-xsl-ns/fo/docbook.xsl"/>
+<xsl:import href="../docbook-xsl/fo/docbook.xsl"/>
 
 <xsl:output indent="no"/>
 
