@@ -59,8 +59,11 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
 
     private static final Logger LOG = LoggerFactory.getLogger(OsgiSpecPdfMojo.class);
     
-    @Parameter(property = "osgi.docbook.spec", defaultValue = "src/main/resources/spec/spec.xml")
+    @Parameter(property = "osgi.docbook.spec.source", defaultValue = "src/main/resources/spec/spec.xml")
     String chapterSource;
+    
+    @Parameter(property = "osgi.docbook.spec.title", defaultValue = "${project.name}")
+    String specTitle;
     
     @Inject
     MavenProject project;
@@ -76,10 +79,16 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
         
         LOG.info("JavaDoc generation and transformation complete");
         
-        setupBook(baseDir, buildDir, transformerFactory);
+        String bookXML = setupBook(baseDir, buildDir, transformerFactory);
     }
-    
 
+    /**
+     * Generate JavaDoc for the specification packages and convert it into docbook 
+     * @param baseDir
+     * @param buildDir
+     * @param transformerFactory
+     * @throws MojoExecutionException
+     */
     private void makeJavaDoc(Path baseDir, Path buildDir, TransformerFactory transformerFactory) throws MojoExecutionException {
         List<Path> sources = project.getCompileSourceRoots().stream()
                 .map(baseDir::resolve)
@@ -150,9 +159,18 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
         return Stream.empty();
     }
     
-    private void setupBook(Path baseDir, Path buildDir, TransformerFactory transformerFactory) {
-        Path source = baseDir.resolve(chapterSource);
-        
+    private String setupBook(Path baseDir, Path buildDir, TransformerFactory transformerFactory) throws MojoExecutionException {
+        StringWriter sw = new StringWriter();
+        try (InputStream xslt = getClass().getResourceAsStream("/docbook/book/book-setup.xsl")){
+            Transformer transformer = transformerFactory.newTransformer(new StreamSource(xslt));
+            transformer.setParameter("title", specTitle);
+            try (InputStream input = getClass().getResourceAsStream("/docbook/book/book.xml")) {
+                transformer.transform(new StreamSource(input), new StreamResult(sw));
+            }
+            return sw.toString();
+        } catch (IOException | TransformerException e) {
+            throw new MojoExecutionException("Failed to setup specification book", e);
+        }
     }
     
 }
