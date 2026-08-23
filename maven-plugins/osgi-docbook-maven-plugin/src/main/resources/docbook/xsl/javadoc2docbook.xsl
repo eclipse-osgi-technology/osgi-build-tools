@@ -979,7 +979,7 @@ version="2.0">
       <xsl:apply-templates select="p" mode="html"/>
     </xsl:for-each>
 
-    <xsl:if test="normalize-space(description)">
+    <xsl:if test="normalize-space(string-join(description, ' '))">
       <xsl:apply-templates select="description"/>
     </xsl:if>
 
@@ -1063,7 +1063,7 @@ version="2.0">
       </xsl:if>
     </xsl:element>
 
-    <xsl:if test="normalize-space(description)">
+    <xsl:if test="normalize-space(string-join(description, ' '))">
       <xsl:apply-templates select="description"/>
     </xsl:if>
 
@@ -1084,7 +1084,7 @@ version="2.0">
     </xsl:call-template>
 
     <!-- If method is empty, add an empty para to make the section valid -->
-    <xsl:if test="string-length(normalize-space(*)) = 0">
+    <xsl:if test="string-length(normalize-space(string-join(*, ''))) = 0">
       <xsl:element name="para" namespace="{$ns}"/>
     </xsl:if>
 
