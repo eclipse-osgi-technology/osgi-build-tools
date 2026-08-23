@@ -66,6 +66,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.xmlgraphics.io.Resource;
@@ -82,7 +84,7 @@ import org.xml.sax.ext.EntityResolver2;
 import net.sf.saxon.TransformerFactoryImpl;
 import net.sf.saxon.lib.FeatureKeys;
 
-@Mojo(name = "pdf", defaultPhase = LifecyclePhase.COMPILE)
+@Mojo(name = "pdf", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class OsgiSpecPdfMojo extends AbstractMojo {
 
     private static final String INTERNAL_FO = "internal:/fo";
@@ -120,7 +122,13 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
         // Set up folders
         Path baseDir = project.getBasedir().toPath().toAbsolutePath();
         Path buildDir = baseDir.resolve(project.getBuild().getDirectory()).resolve("spec/pdf");
-        
+        try {
+            // The javadoc step normally creates this, but it may be skipped
+            Files.createDirectories(buildDir);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to create " + buildDir, e);
+        }
+
         // Set up SAXON transformer
         TransformerFactory transformerFactory = TransformerFactory.newInstance(
                 TransformerFactoryImpl.class.getName(), TransformerFactoryImpl.class.getClassLoader());
@@ -164,7 +172,13 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
                 .map(baseDir::resolve)
                 .flatMap(this::findSources)
                 .toList();
-        
+
+        if (sources.isEmpty()) {
+            // The javadoc tool fails when handed no sources
+            LOG.info("No sources to document, skipping the JavaDoc step");
+            return;
+        }
+
         // Use the JDK documentation tools to build the raw javadoc with our custom doclet
         DocumentationTool documentationTool = ToolProvider.getSystemDocumentationTool();
         DiagnosticListener<? super JavaFileObject> diagnosticListener = new JavaDocProcessListener();
@@ -174,8 +188,29 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
         StringWriter sw = new StringWriter();
         Boolean result;
         try {
+            // The doclet has to resolve annotations such as
+            // org.osgi.annotation.versioning.Version, so the module's compile
+            // classpath has to be on it. An explicit -classpath REPLACES the
+            // default one, so append what would have been used anyway.
+            List<String> classpath = new java.util.ArrayList<>();
+            try {
+                classpath.addAll(project.getCompileClasspathElements());
+            } catch (DependencyResolutionRequiredException e) {
+                throw new MojoExecutionException("Failed to resolve compile classpath", e);
+            }
+            String inherited = System.getProperty("java.class.path");
+            if (inherited != null && !inherited.isBlank()) {
+                classpath.add(inherited);
+            }
+            List<String> options = new java.util.ArrayList<>(List.of(
+                "-protected", "--show-members", "protected", "-encoding", "UTF-8",
+                "-d", javadocDir.toString()));
+            if (!classpath.isEmpty()) {
+                options.add("-classpath");
+                options.add(String.join(java.io.File.pathSeparator, classpath));
+            }
             result = documentationTool.getTask(sw, fileManager, diagnosticListener, XmlDoclet.class, 
-                List.of("-protected", "--show-members", "protected", "-encoding", "UTF-8", "-d", javadocDir.toString()),
+                options,
                 fileManager.getJavaFileObjectsFromPaths(sources)).call();
         } finally {
             LOG.debug("JavaDoc generation output:\n\n{}", sw.toString());
@@ -329,7 +364,9 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
                     url = getClass().getResource("/docbook/xsl/custom-fo.xsl");
                     systemId = INTERNAL_FO;
                 } else {
-                    url = getClass().getResource("/docbook/xsl/" + href);
+                    // normalize ".." segments — Class.getResource rejects them
+                    url = getClass().getResource(
+                        URI.create("/docbook/xsl/" + href).normalize().toString());
                 }
                 if(url == null) {
                     LOG.error("No file {} with base {}", href, base);
@@ -339,6 +376,20 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
                     source.setSystemId(systemId != null ? systemId : url.toURI().toASCIIString());
                     return source;
                 }
+            } else if (base != null && base.startsWith("jar:") && !href.contains(":")) {
+                // jar: URIs are opaque — resolve the entry path textually
+                LOG.debug("Resolving include {} inside jar {}", href, base);
+                int sep = base.indexOf("!/");
+                String entry = base.substring(sep + 1);
+                String resolved = URI.create(entry).resolve(href).normalize().toString();
+                URL url = getClass().getResource(resolved);
+                if (url == null) {
+                    LOG.error("No jar resource {} resolved from {} + {}", resolved, base, href);
+                    throw new TransformerException("Failed to find file");
+                }
+                StreamSource source = new StreamSource(url.openStream());
+                source.setSystemId(url.toURI().toASCIIString());
+                return source;
             } else {
                 LOG.debug("Resolving include {} for file {}", href, base);
                 URI uri = URI.create(base).resolve(href);
@@ -391,7 +442,8 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
                     } else if(specFile.toFile().toURI().equals(URI.create(baseURI))) {
                         // This is the spec XML
                         LOG.debug("Resolving include of {} in the spec file", systemId);
-                        Path p = specFile.resolve(systemId);
+                        // Includes are relative to the spec file's directory
+                        Path p = specFile.getParent().resolve(systemId).normalize();
                         if(Files.exists(p)) {
                             LOG.debug("File found relative to the spec source {}", p);
                             InputSource is = new InputSource(Files.newBufferedReader(p));
@@ -405,6 +457,20 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
                                 is.setSystemId(p.toUri().toASCIIString());
                                 return is;
                             } else {
+                                // Legacy include path for generated javadoc:
+                                // .../generated/javadoc/docbook/<pkg>.xml
+                                java.util.regex.Matcher m = java.util.regex.Pattern
+                                        .compile(".*generated/javadoc/docbook/(.+)")
+                                        .matcher(systemId);
+                                if (m.matches()) {
+                                    p = buildDir.resolve("javadoc").resolve(m.group(1));
+                                }
+                                if (Files.exists(p)) {
+                                    LOG.debug("File found via legacy javadoc mapping {}", p);
+                                    InputSource is = new InputSource(Files.newBufferedReader(p));
+                                    is.setSystemId(p.toUri().toASCIIString());
+                                    return is;
+                                }
                                 LOG.error("File {} included by {} not found", systemId, specFile);
                                 throw new TransformerException("Unknown file " + systemId);
                             }
