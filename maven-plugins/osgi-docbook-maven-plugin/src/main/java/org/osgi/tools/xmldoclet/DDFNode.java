@@ -80,9 +80,11 @@ public class DDFNode {
     String          mime        = "";
 
     /**
-     * @param parent
-     * @param name
-     * @param type
+     * Creates a new DDF node.
+     *
+     * @param parent the parent node, or {@code null} for the root
+     * @param name the node name
+     * @param typeName the fully qualified type name of the node
      */
     public DDFNode(DDFNode parent, String name, String typeName) {
         this.parent = parent;
@@ -147,7 +149,10 @@ public class DDFNode {
     }
 
     /**
-     * @param pw
+     * Prints this node and its children as XML.
+     *
+     * @param pw the writer to print to
+     * @param indent the indentation prefix for this node
      */
     @SuppressWarnings("boxing")
     public void print(PrintWriter pw, String indent) {

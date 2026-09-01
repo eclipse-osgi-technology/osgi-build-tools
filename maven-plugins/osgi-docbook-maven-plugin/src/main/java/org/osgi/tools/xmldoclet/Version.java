@@ -38,7 +38,6 @@ import java.util.StringTokenizer;
  * {@code Version} objects are immutable.
  * 
  * @since 1.3
- * @Immutable
  * @author $Id: 05390d7259d3cb07d53229c4e20b9677230028a1 $
  */
 
