@@ -224,10 +224,10 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
         // Transform the javadoc into docbook format
         try (InputStream xslt = getClass().getResourceAsStream("/docbook/xsl/javadoc2docbook.xsl")){
             StreamSource source = new StreamSource(xslt);
-            source.setSystemId(javadocDir.resolve("javadoc2docbook.xsl").toFile());
+            source.setSystemId(javadocDir.resolve("javadoc2docbook.xsl").toUri().toString());
             Transformer transformer = transformerFactory.newTransformer(source);
             
-            transformer.setParameter("destdir", javadocDir.toString());
+            transformer.setParameter("destdir", javadocDir.toUri().toString());
             transformer.setParameter("ddf.only", 0);
 
             Path javadocXml = javadocDir.resolve("javadoc.xml");
@@ -236,7 +236,7 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
             try (Reader input = Files.newBufferedReader(javadocXml);
                     Writer output = Files.newBufferedWriter(javadocTxt, CREATE, TRUNCATE_EXISTING)) {
                 StreamResult outputTarget = new StreamResult(output);
-                outputTarget.setSystemId(javadocTxt.toFile());
+                outputTarget.setSystemId(javadocTxt.toUri().toString());
                 transformer.transform(new StreamSource(input), outputTarget);
                 LOG.debug("JavaDoc docbook generation complete");
             }
@@ -247,7 +247,7 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
             try (Reader input = Files.newBufferedReader(javadocXml);
                     Writer output = Files.newBufferedWriter(ddfTxt, CREATE, TRUNCATE_EXISTING)) {
                 StreamResult outputTarget = new StreamResult(output);
-                outputTarget.setSystemId(ddfTxt.toFile());
+                outputTarget.setSystemId(ddfTxt.toUri().toString());
                 transformer.transform(new StreamSource(input), outputTarget);
                 LOG.debug("JavaDoc DDF generation complete");
             }
@@ -534,7 +534,7 @@ public class OsgiSpecPdfMojo extends AbstractMojo {
                     LOG.debug("File {} exists. Using it directly", uri);
                     return new Resource(Files.newInputStream(requiredPath));
                 } else {
-                    String relative = buildDir.relativize(requiredPath).toString();
+                    String relative = buildDir.relativize(requiredPath).toString().replace('\\', '/');
                     InputStream is; 
                     if(relative.startsWith("@font.base.url@/")) {
                         LOG.debug("URI is a font URI, searching local fonts");
