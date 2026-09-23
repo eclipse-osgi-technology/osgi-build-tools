@@ -60,6 +60,17 @@ final class SpecBook {
 
     private static final Pattern LEGACY_JAVADOC = Pattern.compile(".*generated/javadoc/docbook/(.+)");
 
+    /**
+     * Legacy include path for schema listings, e.g.
+     * .../generated/xmlns/scr/v1.5.0/scr.xsd or
+     * .../generated/json.schema/featurelauncher/v1.0.0/bundle-start-levels.json.
+     * The monorepo build copied these into generated/; in a specification
+     * repository the sources live under xmlns/ or json.schema/ at the
+     * repository root, so the mapped path is searched upwards from the spec
+     * file's directory.
+     */
+    private static final Pattern LEGACY_RESOURCE = Pattern.compile(".*generated/((?:xmlns|json\\.schema)/.+)");
+
     private final Path specFile;
     private final Path specDir;
     private final String bookXML;
@@ -183,6 +194,20 @@ final class SpecBook {
                             if (Files.exists(p)) {
                                 LOG.debug("File found via legacy javadoc mapping {}", p);
                                 return inputSource(p);
+                            }
+                        }
+                        // Legacy include path for schema listings: the sources
+                        // live under xmlns/ or json.schema/, in a spec repo at
+                        // the repository root - search upwards from the spec
+                        m = LEGACY_RESOURCE.matcher(systemId);
+                        if (m.matches()) {
+                            Path dir = specFile.getParent();
+                            for (int i = 0; i < 8 && dir != null; i++, dir = dir.getParent()) {
+                                p = dir.resolve(m.group(1));
+                                if (Files.exists(p)) {
+                                    LOG.debug("File found via legacy resource mapping {}", p);
+                                    return inputSource(p);
+                                }
                             }
                         }
                         LOG.error("File {} included by {} not found", systemId, specFile);
