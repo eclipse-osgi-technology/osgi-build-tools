@@ -7,8 +7,8 @@ Maven reactor containing Maven plugins and their supporting build configuration.
 
 The repository currently provides:
 
-- `osgi-docbook-maven-plugin`: generates an OSGi specification PDF from a
-	DocBook chapter and the Java API documentation in the project.
+- `osgi-docbook-maven-plugin`: generates an OSGi specification PDF and HTML
+	site from a DocBook chapter and the Java API documentation in the project.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ mvn verify
 This compiles the parent and Maven plugin projects, runs the plugin tests, and
 packages the plugin. The integration-style test project under
 `maven-plugins/osgi-docbook-maven-plugin/src/test/resources/test-projects`
-exercises PDF generation.
+exercises PDF and HTML generation.
 
 Useful build commands:
 
@@ -55,7 +55,8 @@ is built at
 ## Use the DocBook plugin
 
 After installing this repository locally, add the plugin to a specification
-project. The default goal is `pdf`, and it runs in the `compile` phase.
+project. It has two goals, `pdf` and `html`, which both run in the `compile`
+phase. Bind the goals for the formats you need:
 
 ```xml
 <build>
@@ -64,6 +65,20 @@ project. The default goal is `pdf`, and it runs in the `compile` phase.
 			<groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
 			<artifactId>osgi-docbook-maven-plugin</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+			<executions>
+				<execution>
+					<id>spec-pdf</id>
+					<goals>
+						<goal>pdf</goal>
+					</goals>
+				</execution>
+				<execution>
+					<id>spec-html</id>
+					<goals>
+						<goal>html</goal>
+					</goals>
+				</execution>
+			</executions>
 		</plugin>
 	</plugins>
 </build>
@@ -82,14 +97,30 @@ Generate the document with:
 mvn compile
 ```
 
-The plugin creates the following files in `target/spec/pdf`:
+Both goals first convert the Javadoc of the project into DocBook, under
+`target/spec/javadoc`. This step is skipped when its output is newer than
+every source file, so a build that runs both goals only generates it once.
+
+The `pdf` goal creates the following files in `target/spec/pdf`:
 
 - `<final-name>.fo`: the generated XSL-FO document, attached with classifier
 	`specification` and type `fo`
 - `<final-name>.pdf`: the generated PDF, attached with classifier
 	`specification` and type `pdf`
-- intermediate Javadoc and DocBook transformation files under
-	`target/spec/pdf/javadoc`
+
+The `html` goal creates a chunked XHTML site in `target/spec/html`, with the
+same layout as the specification pages on docs.osgi.org:
+
+- `index.html`: the book title page and table of contents
+- `<chapter id>.html`: one page per chapter, named after its `xml:id`, plus
+	`LICENSE.html` and `preface.html`
+- `css/`, `js/` and `images/`: the style sheets, scripts (including
+	highlight.js for code listings), logo, draft watermark and the images of the
+	chapter. SVG images are used as they are, and are referred to by file name,
+	so every image in a chapter needs a distinct file name.
+
+It also creates `target/<final-name>-html.zip` from the site, attached with
+classifier `specification-html` and type `zip`.
 
 The output base name normally comes from Maven's `project.build.finalName`.
 If that value is unavailable, the plugin uses `<artifactId>.<version>`.
@@ -102,6 +133,8 @@ Override the defaults with Maven properties or plugin configuration:
 | --- | --- | --- |
 | `osgi.docbook.spec.source` | `src/main/resources/spec/spec.xml` | Path to the DocBook specification chapter, relative to the project base directory |
 | `osgi.docbook.spec.title` | `${project.name}` | Title inserted into the generated specification book |
+| `osgi.docbook.html.skip` | `false` | Skip the `html` goal |
+| `osgi.docbook.html.attach` | `true` | Create and attach the zip of the HTML site |
 
 For example:
 
@@ -143,10 +176,16 @@ mvn -pl maven-plugins/osgi-docbook-maven-plugin -am test
 mvn clean verify
 ```
 
-When changing PDF generation, inspect the generated files under
-`maven-plugins/osgi-docbook-maven-plugin/target/spec/pdf` and add or update the
-sample project resources and `PDFGenerationTest` as appropriate. Keep generated
-`target` directories out of commits.
+When changing PDF or HTML generation, inspect the generated files under
+`maven-plugins/osgi-docbook-maven-plugin/target/test-classes/test-projects/simple/target/spec`
+and add or update the sample project resources, `PDFGenerationTest` and
+`HTMLGenerationTest` as appropriate. Keep generated `target` directories out of
+commits.
+
+The DocBook 1.78.1 chunker cannot write files with Saxon-HE, so
+`custom-html-chunker.xsl` replaces it. Chunks are first collected as marker
+elements and then written with `xsl:result-document`; the stylesheet explains
+why.
 
 ## License
 

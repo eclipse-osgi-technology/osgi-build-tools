@@ -22,9 +22,11 @@ parent::d:tasksummary|parent::d:warning|parent::d:topic">
   exclude-result-prefixes="exsl xlink suwl d"
   version="1.0">
 
-<xsl:import href="../../../licensed/docbook-xsl-ns/xhtml/chunkfast.xsl"/>
+<xsl:import href="../docbook-xsl/xhtml/chunkfast.xsl"/>
 <xsl:import href="custom-html-common.xsl"/>
-<xsl:include href="../../../licensed/docbook-xsl-ns/webhelp/xsl/titlepage.templates.xsl"/>
+<!-- Imported last so its chunk writers take precedence over the DocBook ones -->
+<xsl:import href="custom-html-chunker.xsl"/>
+<xsl:include href="../docbook-xsl/webhelp/xsl/titlepage.templates.xsl"/>
 <xsl:output omit-xml-declaration="yes"/>
 
 <!--==============================================================-->
@@ -53,7 +55,7 @@ parent::d:tasksummary|parent::d:warning|parent::d:topic">
 <xsl:param name="root.filename">index</xsl:param>
 
 <xsl:param name="draft.mode">yes</xsl:param>
-<xsl:param name="draft.watermark.image">draft.png</xsl:param>
+<xsl:param name="draft.watermark.image">images/draft.svg</xsl:param>
 
 <xsl:param name="autotoc.label.separator" select="'&#160;'" />
 <xsl:param name="description.bullet" select="'&#x25A1;'" />
@@ -207,57 +209,16 @@ example before
   </xsl:choose>
 </xsl:template>
 
+<!-- Images are copied flat into images/ (see OsgiSpecHtmlMojo), so only the
+     file name is kept. SVGs are used directly rather than rasterized. -->
 <xsl:template match="@fileref" >
-  <xsl:variable name="filename">
-    <xsl:choose>
-      <xsl:when test="contains(., ':')">
-        <!-- it has a uri scheme so it is an absolute uri -->
-        <xsl:value-of select="."/>
-      </xsl:when>
-      <xsl:when test="$keep.relative.image.uris != 0">
-        <!-- leave it alone -->
-        <xsl:value-of select="."/>
-      </xsl:when>
-      <xsl:otherwise>
-        <!-- its a relative uri -->
-        <xsl:call-template name="relative-uri">
-          <xsl:with-param name="destdir">
-            <xsl:call-template name="dbhtml-dir">
-              <xsl:with-param name="context" select=".."/>
-            </xsl:call-template>
-          </xsl:with-param>
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
-
-  <xsl:variable name="chapter">
-    <xsl:variable name="label">
-      <xsl:value-of select="ancestor::d:chapter/@label"/>
-    </xsl:variable>
-    <xsl:choose>
-      <xsl:when test="string(number($label)) != 'NaN'">
-        <xsl:value-of select="format-number($label, '000')"/>
-      </xsl:when>
-      <xsl:otherwise>0</xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
-
-  <xsl:variable name="ext">
-    <xsl:call-template name="filename-extension">
-      <xsl:with-param name="filename" select="$filename"/>
-    </xsl:call-template>
-  </xsl:variable>
-
   <xsl:choose>
-    <xsl:when test="$ext = 'svg'">
-      <xsl:if test="$chapter">
-        <xsl:value-of select="concat($chapter, '-')"/>
-      </xsl:if>
-      <xsl:value-of select="concat(substring($filename,1,string-length($filename)-3), 'png')"/>
+    <xsl:when test="contains(., ':')">
+      <!-- it has a uri scheme so it is an absolute uri -->
+      <xsl:value-of select="."/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:value-of select="$filename" />
+      <xsl:value-of select="tokenize(., '/')[last()]"/>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
