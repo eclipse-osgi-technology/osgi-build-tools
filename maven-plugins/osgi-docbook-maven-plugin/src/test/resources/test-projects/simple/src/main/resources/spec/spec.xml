@@ -493,6 +493,19 @@ DataSource dataSource = dsf.createDataSource(props);</programlisting>
   <xi:include href="javadoc/org.osgi.service.jdbc.xml"/>
 
   <section>
+    <title>Schemas</title>
+
+    <para>Schema listings are included from their sources at the repository
+    root via the legacy generated/ path of the monorepo build.</para>
+
+    <programlisting role="pgwide"><xi:include encoding="utf-8"
+        href="../../generated/xmlns/test/v1.0.0/test.xsd" parse="text"/></programlisting>
+
+    <programlisting role="pgwide"><xi:include encoding="utf-8"
+        href="../../generated/json.schema/test/v1.0.0/start-levels.json" parse="text"/></programlisting>
+  </section>
+
+  <section>
     <title>References</title>
 
     <bibliolist>

@@ -12,6 +12,7 @@ package org.eclipse.osgi.technology.buildtools.maven.docbook.test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -66,6 +67,11 @@ class HTMLGenerationTest {
         assertTrue(chapter.contains("this one</span>") || chapter.contains(" this one "),
                 "Unknown reference not rendered as text");
 
+        // Schema listings referenced via the legacy generated/ path resolve
+        // to their sources at the repository root
+        assertTrue(chapter.contains("legacy-xmlns-marker"), "xmlns schema listing missing");
+        assertTrue(chapter.contains("legacy-json-marker"), "json schema listing missing");
+
         List<Artifact> attached = project.getAttachedArtifacts();
         assertEquals(1, attached.size());
         Artifact zip = attached.get(0);
@@ -75,6 +81,45 @@ class HTMLGenerationTest {
             assertTrue(zf.getEntry("index.html") != null, "index.html not in zip");
             assertTrue(zf.getEntry("images/jdbc-classes.svg") != null, "Image not in zip");
         }
+    }
+
+    @Test
+    @InjectMojo(goal = "html")
+    @Basedir("/test-projects/simple")
+    public void testLegacyJavadocInclude(OsgiSpecHtmlMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "attachZip", false);
+        // the migrated chapters reference their javadoc through the legacy
+        // monorepo path generated/javadoc/docbook/<package>.xml
+        MojoExtension.setVariableValueToObject(mojo, "chapterSource",
+                "src/main/resources/spec/spec-legacy-javadoc.xml");
+        mojo.execute();
+
+        Path html = Path.of(project.getBuild().getDirectory(), "spec", "html");
+        String chapter = Files.readString(html.resolve("service.jdbc.html"), UTF_8);
+        assertTrue(chapter.contains("org.osgi.service.jdbc.DataSourceFactory"),
+                "Javadoc content missing from the legacy include");
+    }
+
+    @Test
+    @InjectMojo(goal = "html")
+    @Basedir("/test-projects/simple")
+    public void testMissingLegacyResourceFails(OsgiSpecHtmlMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "attachZip", false);
+        MojoExtension.setVariableValueToObject(mojo, "chapterSource",
+                "src/main/resources/spec/spec-missing-include.xml");
+        // a listing that resolves nowhere must fail the build, not be dropped
+        Exception e = assertThrows(Exception.class, mojo::execute);
+        boolean unknownFile = false;
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            unknownFile |= String.valueOf(t.getMessage()).contains("Unknown file");
+        }
+        assertTrue(unknownFile, "Expected an 'Unknown file' failure, got: " + e);
     }
 
     @Test
