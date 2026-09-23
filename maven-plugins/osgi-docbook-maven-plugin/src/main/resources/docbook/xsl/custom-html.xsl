@@ -19,11 +19,13 @@ parent::d:tasksummary|parent::d:warning|parent::d:topic">
   xmlns:d="http://docbook.org/ns/docbook"
   xmlns:xlink='http://www.w3.org/1999/xlink'
   xmlns:suwl="http://nwalsh.com/xslt/ext/com.nwalsh.saxon.UnwrapLinks"
-  exclude-result-prefixes="exsl xlink suwl d"
+  xmlns:osgi="urn:org.osgi:docbook"
+  exclude-result-prefixes="exsl xlink suwl d osgi"
   version="1.0">
 
 <xsl:import href="../docbook-xsl/xhtml/chunkfast.xsl"/>
 <xsl:import href="custom-html-common.xsl"/>
+<xsl:import href="custom-html-links.xsl"/>
 <!-- Imported last so its chunk writers take precedence over the DocBook ones -->
 <xsl:import href="custom-html-chunker.xsl"/>
 <xsl:include href="../docbook-xsl/webhelp/xsl/titlepage.templates.xsl"/>
@@ -442,7 +444,8 @@ example before
     <xsl:variable name="target" select="$targets[1]"/>
 
     <xsl:if test="count($targets)=0">
-      <xsl:if test="count(ancestor::d:section[@role = 'package'])=0">
+      <xsl:if test="count(ancestor::d:section[@role = 'package'])=0
+                    and not(osgi:external-target($linkend))">
         <xsl:message>
           <xsl:text>[</xsl:text>
           <xsl:apply-templates select="ancestor::d:section[1]" mode="label.markup"/>
@@ -656,6 +659,12 @@ example before
 
               <xsl:copy-of select="$content"/>
             </a>
+          </xsl:when>
+          <xsl:when test="count($target) = 0">
+            <xsl:call-template name="osgi.external.link">
+              <xsl:with-param name="linkend" select="$linkend"/>
+              <xsl:with-param name="content" select="$content"/>
+            </xsl:call-template>
           </xsl:when>
           <xsl:otherwise>
             <xsl:apply-templates select="$target" mode="html.title.attribute"/>
