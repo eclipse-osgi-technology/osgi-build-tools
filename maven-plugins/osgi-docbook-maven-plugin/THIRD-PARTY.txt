@@ -5,6 +5,10 @@ Lists of 3rd party dependencies included directly in source
 
     * Docbook XSL transforms (Content under src/main/resources/docbook/docbook-xsl - http://sourceforge.net/projects/docbook/)
 
+(BSD 3-Clause License)
+
+    * highlight.js 9.4.0 (src/main/resources/docbook/xsl/html-resources/js/highlight.pack.js and src/main/resources/docbook/xsl/html-resources/css/github.css - https://highlightjs.org/)
+
 (Public Domain)
 
-    * OFFO English Hyphenation Patterns (src/main/resources/docbook/fop/hyph/en.hyp - http://offo.sourceforge.net/)
+    * OFFO English Hyphenation Patterns (src/main/resources/fop/hyph/en.hyp - http://offo.sourceforge.net/)

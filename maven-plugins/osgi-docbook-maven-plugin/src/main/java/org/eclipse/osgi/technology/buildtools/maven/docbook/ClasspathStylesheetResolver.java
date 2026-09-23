@@ -91,6 +91,12 @@ final class ClasspathStylesheetResolver implements URIResolver {
                     source.setSystemId(systemId != null ? systemId : url.toURI().toASCIIString());
                     return source;
                 }
+            } else if (base != null && "".equals(href)) {
+                // document('') means the module itself; URI.resolve would drop its file name
+                LOG.debug("Resolving the style sheet module {} itself", base);
+                StreamSource source = new StreamSource(URI.create(base).toURL().openStream());
+                source.setSystemId(base);
+                return source;
             } else if (base != null && base.startsWith("jar:") && !href.contains(":")) {
                 // jar: URIs are opaque, so resolve the entry path textually
                 LOG.debug("Resolving include {} inside jar {}", href, base);

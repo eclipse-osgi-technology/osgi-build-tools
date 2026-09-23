@@ -24,10 +24,12 @@
         </title>
     </xsl:template>
 
+    <!-- Copied so that its xml:id stays the target of release xrefs -->
     <xsl:template match="db:info/db:releaseinfo">
-        <title>
+        <xsl:copy>
+            <xsl:apply-templates select="@*"/>
             <xsl:value-of select="concat('Release ', $version)"/>
-        </title>
+        </xsl:copy>
     </xsl:template>
 
     <xsl:template match="db:info/db:pubdate">

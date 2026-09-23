@@ -11,12 +11,8 @@
     exclude-result-prefixes="d db exsl ng redirect saxon"
     version="1.0">
 
-    <xsl:param name="chunker.output.method">
-        <xsl:choose>
-            <xsl:when test="contains(system-property('xsl:vendor'), 'SAXON 6')">saxon:xhtml</xsl:when>
-            <xsl:otherwise>html</xsl:otherwise>
-        </xsl:choose>
-    </xsl:param>
+    <!-- The chunks are written by xsl:result-document, see custom-html-chunker.xsl -->
+    <xsl:param name="chunker.output.method">xhtml</xsl:param>
 
     <xsl:param name="doc.title">
       <xsl:call-template name="get.doc.title"/>
@@ -47,7 +43,7 @@
 
     <xsl:param name="component.label.includes.part.label" select="1"/>
     <xsl:param name="suppress.footer.navigation">0</xsl:param>
-    <xsl:param name="graphic.default.extension">png</xsl:param>
+    <xsl:param name="graphic.default.extension">svg</xsl:param>
 
 <xsl:template name="user.head.title">
     <xsl:param name="node" select="."/>
@@ -96,7 +92,7 @@
     <link rel="shortcut icon" href="images/favicon.png" type="image/x-icon"/>
     <link rel="stylesheet" type="text/css" href="css/custom.css"/>
     <link rel="stylesheet" type="text/css" href="css/github.css"/>
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Ubuntu:regular,bold&amp;subset=Latin" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:regular,bold&amp;subset=Latin" />
     <script type="text/javascript" src="js/highlight.pack.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
 </xsl:template>
