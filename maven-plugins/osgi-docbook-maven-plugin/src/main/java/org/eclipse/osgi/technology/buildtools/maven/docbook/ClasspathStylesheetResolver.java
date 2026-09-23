@@ -71,7 +71,13 @@ final class ClasspathStylesheetResolver implements URIResolver {
     @Override
     public Source resolve(String href, String base) throws TransformerException {
         try {
-            if(internalId.equals(base)) {
+            if(internalId.equals(base) && URI.create(href).isAbsolute()) {
+                // e.g. a document() call on a file supplied by the user
+                LOG.debug("Resolving absolute URI {} for style sheet {}", href, internalId);
+                StreamSource source = new StreamSource(URI.create(href).toURL().openStream());
+                source.setSystemId(href);
+                return source;
+            } else if(internalId.equals(base)) {
                 LOG.debug("Resolving include {} for style sheet {}", href, internalId);
                 URL url;
                 String systemId = null;

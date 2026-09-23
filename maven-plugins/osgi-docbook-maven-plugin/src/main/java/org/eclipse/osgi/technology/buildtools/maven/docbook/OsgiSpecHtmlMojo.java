@@ -13,6 +13,7 @@ package org.eclipse.osgi.technology.buildtools.maven.docbook;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,6 +55,9 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     private static final String INTERNAL_HTML = "internal:/html";
     private static final String INTERNAL_HTML_IMAGES = "internal:/html-images";
 
+    /** The bundled index of chapters and packages published on docs.osgi.org */
+    private static final String LINK_INDEX = "../links/osgi-spec-index.xml";
+
     /** The static files that every page references, relative to /docbook/xsl/html-resources/ */
     private static final List<String> STATIC_RESOURCES = List.of(
             "css/custom.css", "css/github.css",
@@ -69,6 +73,22 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     /** Attach a zip of the HTML pages to the project with the classifier {@code specification-html} */
     @Parameter(property = "osgi.docbook.html.attach", defaultValue = "true")
     boolean attachZip;
+
+    /**
+     * Link references to chapters and packages that are not part of this
+     * specification to their published pages. When false they are rendered as
+     * plain text.
+     */
+    @Parameter(property = "osgi.docbook.html.externalLinks", defaultValue = "true")
+    boolean externalLinks;
+
+    /** The URL that the paths in the external link index are relative to */
+    @Parameter(property = "osgi.docbook.html.externalLinkBaseUrl", defaultValue = "https://docs.osgi.org/specification/")
+    String externalLinkBaseUrl;
+
+    /** An external link index to use instead of the bundled one */
+    @Parameter(property = "osgi.docbook.html.externalLinkIndex")
+    File externalLinkIndex;
 
     @Override
     String formatName() {
@@ -116,6 +136,11 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             transformer.setParameter("webhelp.default.topic", "index.html");
             transformer.setParameter("release.version", project.getVersion());
             transformer.setParameter("chunker.output.encoding", "UTF-8");
+            if (externalLinks) {
+                transformer.setParameter("external.links.index", externalLinkIndex != null
+                        ? externalLinkIndex.toPath().toAbsolutePath().toUri().toString() : LINK_INDEX);
+                transformer.setParameter("external.links.base", externalLinkBaseUrl);
+            }
 
             StreamResult result = new StreamResult(mainOutput.toFile());
             result.setSystemId(mainOutput.toUri().toString());

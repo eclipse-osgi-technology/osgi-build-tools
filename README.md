@@ -125,6 +125,16 @@ classifier `specification-html` and type `zip`.
 The output base name normally comes from Maven's `project.build.finalName`.
 If that value is unavailable, the plugin uses `<artifactId>.<version>`.
 
+### Links to other specifications
+
+A specification project holds a single chapter, so references to other
+chapters, such as `<xref linkend="service.event"/>`, and to the Javadoc of
+their packages, such as `<link linkend="org.osgi.util.promise.Promise">`, have
+no target in the book. The PDF renders them as text. The HTML links them to
+the published specifications, using an index of the chapters, sections and
+API packages of the OSGi Compendium Release 8.1 and Core Release 8 that is
+bundled with the plugin. References that are not in the index stay as text.
+
 ### Plugin properties
 
 Override the defaults with Maven properties or plugin configuration:
@@ -135,6 +145,9 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.spec.title` | `${project.name}` | Title inserted into the generated specification book |
 | `osgi.docbook.html.skip` | `false` | Skip the `html` goal |
 | `osgi.docbook.html.attach` | `true` | Create and attach the zip of the HTML site |
+| `osgi.docbook.html.externalLinks` | `true` | Link references outside the book to the published specifications; `false` renders them as text |
+| `osgi.docbook.html.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | The URL that the book paths of the link index are relative to |
+| `osgi.docbook.html.externalLinkIndex` | none | A link index file to use instead of the bundled one |
 
 For example:
 
@@ -186,6 +199,26 @@ The DocBook 1.78.1 chunker cannot write files with Saxon-HE, so
 `custom-html-chunker.xsl` replaces it. Chunks are first collected as marker
 elements and then written with `xsl:result-document`; the stylesheet explains
 why.
+
+### Regenerate the link index
+
+The link index,
+`src/main/resources/docbook/links/osgi-spec-index.xml`, is generated from the
+DocBook sources of the legacy build in https://github.com/osgi/osgi by
+`src/tools/link-index.xsl`. Regenerate it when a new release is published on
+docs.osgi.org. Each book is given as `<path under the base URL>=<book.xml URI>`,
+and earlier books take precedence for ids that appear in more than one book:
+
+```sh
+SRC=$(mktemp -d)
+git clone --depth 1 --branch 8.1.0.cmpn https://github.com/osgi/osgi.git "$SRC/cmpn"
+git clone --depth 1 --branch r8-core-final-rerelease https://github.com/osgi/osgi.git "$SRC/core"
+cd maven-plugins/osgi-docbook-maven-plugin
+mvn dependency:build-classpath -Dmdep.outputFile="$SRC/cp.txt"
+java -cp "$(cat "$SRC/cp.txt")" net.sf.saxon.Transform -it -xsl:src/tools/link-index.xsl \
+	-o:src/main/resources/docbook/links/osgi-spec-index.xml \
+	"books=osgi.cmpn/8.1.0/=file:$SRC/cmpn/osgi.specs/docbook/cmpn/book.xml osgi.core/8.0.0/=file:$SRC/core/osgi.specs/docbook/core/book.xml"
+```
 
 ## License
 

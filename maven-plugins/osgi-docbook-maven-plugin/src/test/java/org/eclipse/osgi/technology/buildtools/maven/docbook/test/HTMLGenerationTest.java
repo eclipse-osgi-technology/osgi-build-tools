@@ -56,6 +56,16 @@ class HTMLGenerationTest {
         assertTrue(chapter.contains("<div id=\"sidebar\">") || chapter.contains("id=\"tree\""),
                 "Sidebar table of contents missing");
 
+        // References to chapters and packages outside the book use the published pages
+        assertTrue(chapter.contains("href=\"https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.event.html\""),
+                "Chapter reference not linked externally");
+        assertTrue(chapter.contains("><em>Event Admin Service Specification</em></a>"), "Chapter reference text missing");
+        assertTrue(chapter.contains("href=\"https://docs.osgi.org/specification/osgi.cmpn/8.1.0/util.promise.html#org.osgi.util.promise.Promise\""),
+                "Javadoc reference not linked externally");
+        assertTrue(chapter.contains(">Promise.then()</a>"), "Javadoc member reference text missing");
+        assertTrue(chapter.contains("this one</span>") || chapter.contains(" this one "),
+                "Unknown reference not rendered as text");
+
         List<Artifact> attached = project.getAttachedArtifacts();
         assertEquals(1, attached.size());
         Artifact zip = attached.get(0);

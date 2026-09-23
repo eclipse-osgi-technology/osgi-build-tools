@@ -48,6 +48,18 @@
     from driver specific classes. Additionally, this mechanism helps to use
     common OSGi practices and to avoid class loading problems.</para>
 
+    <!-- Not part of the JDBC specification. This paragraph was added to test
+    references to targets outside the book, see HTMLGenerationTest: a chapter
+    and a javadoc member that are in the bundled link index, and an id that is
+    not in it. -->
+    <para>Drivers that report their state asynchronously can use the <xref
+    linkend="service.event"/>, and can return a <link
+    linkend="org.osgi.util.promise.Promise"><code>Promise</code></link> or
+    use <xref linkend="org.osgi.util.promise.Promise.then-Success-"
+    xrefstyle="hyperlink"/>. Unknown references such as <link
+    linkend="no.such.chapter">this one</link> stay as text.</para>
+    <!-- End of the paragraph added to test external references. -->
+
     <para>This specification uses a number of packages that are defined in
     Java SE 1.4 or later.</para>
 
