@@ -202,18 +202,36 @@ public class XmlDoclet implements Doclet {
 		printAnnotations(pack.getAnnotationMirrors());
 		printComment(pack);
 
-		// Get all types in this package
-		List<TypeElement> classes = pack.getEnclosedElements().stream()
-				.filter(e -> e instanceof TypeElement)
-				.map(e -> (TypeElement) e)
-				.filter(env::isIncluded)
-				.sorted(Comparator.comparing(t -> t.getSimpleName().toString()))
-				.collect(Collectors.toList());
+		// Get all types in this package, nested types included, which sort
+		// after their enclosing type
+		List<TypeElement> classes = new ArrayList<>();
+		collectTypes(pack, classes);
+		classes.sort(Comparator.comparing(this::className));
 
 		for (TypeElement clazz : classes) {
 			print(clazz);
 		}
 		pw.println("  </package>");
+	}
+
+	void collectTypes(Element parent, List<TypeElement> types) {
+		for (Element e : parent.getEnclosedElements()) {
+			if (e instanceof TypeElement type && env.isIncluded(type)) {
+				types.add(type);
+				collectTypes(type, types);
+			}
+		}
+	}
+
+	/**
+	 * The name of a type within its package, such as Outer.Inner for a nested
+	 * type. This is the qn of the type, and the prefix of the qn of its
+	 * members, as ClassDoc.name() was for the monorepo doclet.
+	 */
+	String className(TypeElement type) {
+		String qualified = type.getQualifiedName().toString();
+		String pkg = elementUtils.getPackageOf(type).getQualifiedName().toString();
+		return pkg.isEmpty() ? qualified : qualified.substring(pkg.length() + 1);
 	}
 
 	enum CType {
@@ -224,7 +242,7 @@ public class XmlDoclet implements Doclet {
 	}
 
 	void print(TypeElement clazz) {
-		currentClass = clazz.getSimpleName().toString();
+		currentClass = className(clazz);
 		String name = simplify(currentClass);
 		String superclass = null;
 		CType ctype = CType.CLASS;
@@ -255,7 +273,7 @@ public class XmlDoclet implements Doclet {
 
 		pw.println("  <class name='" + name /**/
 				+ "' fqn='" + clazz.getQualifiedName() /**/
-				+ "' qn='" + clazz.getSimpleName() /**/
+				+ "' qn='" + currentClass /**/
 				+ "' package='" + elementUtils.getPackageOf(clazz).getQualifiedName() /**/
 				+ "' typeParam='" + generics /**/
 				+ "' modifiers='" + modifiers /**/
@@ -551,7 +569,7 @@ public class XmlDoclet implements Doclet {
 				+ "' fqn='"
 				+ escape(containingClass.getQualifiedName() + "." + className) //
 				+ "' qn='"
-				+ className
+				+ className(containingClass)
 				+ "."
 				+ className
 				+ escape(flatSig) //
@@ -592,7 +610,7 @@ public class XmlDoclet implements Doclet {
 				+ "' fqn='"
 				+ containingClass.getQualifiedName() + "." + method.getSimpleName()
 				+ "' qn='"
-				+ containingClass.getSimpleName()
+				+ className(containingClass)
 				+ "."
 				+ method.getSimpleName()
 				+ escape(flatSig)
@@ -655,7 +673,7 @@ public class XmlDoclet implements Doclet {
 				+ "' fqn='"
 				+ containingClass.getQualifiedName() + "." + field.getSimpleName()
 				+ "' qn='"
-				+ containingClass.getSimpleName()
+				+ className(containingClass)
 				+ "."
 				+ field.getSimpleName()
 				+ "' package='"
@@ -1055,32 +1073,24 @@ public class XmlDoclet implements Doclet {
 				break;
 			case METHOD :
 			case CONSTRUCTOR : {
-				if (!isTopLevel(target.getEnclosingElement())) return null;
 				ExecutableElement executable = (ExecutableElement) target;
-				String className = executable.getEnclosingElement().getSimpleName().toString();
-				String name = target.getKind() == ElementKind.CONSTRUCTOR ? className
+				TypeElement type = (TypeElement) executable.getEnclosingElement();
+				String name = target.getKind() == ElementKind.CONSTRUCTOR ? type.getSimpleName().toString()
 						: executable.getSimpleName().toString();
-				ref = className + "." + name + flatten(buildSignature(executable), packageName);
+				ref = className(type) + "." + name + flatten(buildSignature(executable), packageName);
 				break;
 			}
 			case FIELD :
 			case ENUM_CONSTANT :
-				if (!isTopLevel(target.getEnclosingElement())) return null;
-				ref = target.getEnclosingElement().getSimpleName() + "." + target.getSimpleName();
+				ref = className((TypeElement) target.getEnclosingElement()) + "." + target.getSimpleName();
 				break;
 			default :
-				if (!isTopLevel(target)) return null;
-				ref = target.getSimpleName().toString();
+				if (!(target instanceof TypeElement type)) return null;
+				ref = className(type);
 				break;
 		}
 		// As in the monorepo doclet, a reference within the package is relative
 		return (packageName.equals(currentPackage) ? "" : packageName) + "#" + ref;
-	}
-
-	// Only top level types are written to javadoc.xml
-	boolean isTopLevel(Element element) {
-		return element instanceof TypeElement
-				&& element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
 	}
 
 	void warning(Holder holder, String message) {

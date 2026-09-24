@@ -126,24 +126,23 @@ class JavadocTagsTest {
         Output out = generate(mojo);
         Document xml = out.xml();
 
-        // The nested type is not written to javadoc.xml and the unknown type
-        // does not resolve, so neither is linked
+        // The unknown type does not resolve, so it is not linked
         assertEquals(List.of(
                 new Link("#LinkTags.NAME", "NAME"),
                 new Link("#LinkTags.method(String)", "labelled method"),
                 new Link("#LinkTags.LinkTags(int)", "LinkTags(int)"),
+                new Link("#LinkTags.Nested", "Nested"),
                 new Link("org.osgi.service.tags.other#Remote", "org.osgi.service.tags.other.Remote"),
                 new Link("java.lang#String", "String"),
                 new Link("org.osgi.annotation.versioning#Version", "org.osgi.annotation.versioning.Version"),
                 new Link("#LinkTags.NAME", "plain name")),
                 links(xml, "//class[@name='LinkTags']/description//a"));
         String description = text(xml, "//class[@name='LinkTags']/description");
-        assertTrue(description.contains("a nested type Nested, a type"), description);
         assertTrue(description.contains("An unknown type NoSuchType is text."), description);
 
         String html = out.html();
         for (String id : List.of("LinkTags.NAME", "LinkTags.method-String-", "LinkTags.LinkTags-int-",
-                "other.Remote")) {
+                "LinkTags.Nested", "other.Remote")) {
             assertTrue(html.contains("href=\"" + CHAPTER + id + "\""), "Link to " + id + " missing");
         }
         // A package of another specification is linked to its published page

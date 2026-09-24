@@ -43,7 +43,7 @@ public class LinkTags {
     }
 
     /**
-     * A nested type, which is not written to the chapter.
+     * A nested type.
      */
     public static class Nested {
     }
