@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -54,7 +55,11 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 
+import com.sun.source.doctree.AuthorTree;
+import com.sun.source.doctree.BlockTagTree;
+import com.sun.source.doctree.DeprecatedTree;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 import com.sun.source.doctree.EndElementTree;
@@ -62,14 +67,19 @@ import com.sun.source.doctree.EntityTree;
 import com.sun.source.doctree.LinkTree;
 import com.sun.source.doctree.LiteralTree;
 import com.sun.source.doctree.ParamTree;
+import com.sun.source.doctree.ReferenceTree;
 import com.sun.source.doctree.ReturnTree;
 import com.sun.source.doctree.SeeTree;
+import com.sun.source.doctree.SinceTree;
 import com.sun.source.doctree.StartElementTree;
 import com.sun.source.doctree.TextTree;
 import com.sun.source.doctree.ThrowsTree;
 import com.sun.source.doctree.UnknownBlockTagTree;
 import com.sun.source.doctree.ValueTree;
+import com.sun.source.doctree.VersionTree;
+import com.sun.source.util.DocTreePath;
 import com.sun.source.util.DocTrees;
+import com.sun.source.util.TreePath;
 
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
@@ -93,6 +103,17 @@ public class XmlDoclet implements Doclet {
 	Types				typeUtils;
 	Reporter			reporter;
 	String				destDir = ".";
+
+	/**
+	 * The element that owns a doc comment. References in inherited
+	 * documentation must be resolved in the scope of the overridden method,
+	 * not the method being printed.
+	 */
+	record Holder(Element element, DocCommentTree doc) {}
+
+	Holder holder(Element element) {
+		return new Holder(element, docTrees.getDocCommentTree(element));
+	}
 
 	@Override
 	public void init(Locale locale, Reporter reporter) {
@@ -173,8 +194,10 @@ public class XmlDoclet implements Doclet {
 
 	void print(PackageElement pack) {
 		currentPackage = pack.getQualifiedName().toString();
+		// The package attribute lets the pqn key of javadoc2docbook.xsl
+		// resolve references to packages as pkg#pkg
 		pw.println("  <package name='" + currentPackage + "' fqn='" + currentPackage
-				+ "' qn='" + currentPackage + "'>");
+				+ "' qn='" + currentPackage + "' package='" + currentPackage + "'>");
 
 		printAnnotations(pack.getAnnotationMirrors());
 		printComment(pack);
@@ -245,12 +268,12 @@ public class XmlDoclet implements Doclet {
 		printComment(clazz);
 
 		// Type parameter tags
-		DocCommentTree docTree = docTrees.getDocCommentTree(clazz);
-		if (docTree != null) {
+		Holder classHolder = holder(clazz);
+		if (classHolder.doc() != null) {
 			StringBuilder sb = new StringBuilder();
-			for (DocTree tag : docTree.getBlockTags()) {
+			for (DocTree tag : classHolder.doc().getBlockTags()) {
 				if (tag instanceof ParamTree pt && pt.isTypeParameter()) {
-					printParamTag(sb, pt);
+					printParamTag(sb, pt, classHolder);
 				}
 			}
 		}
@@ -681,17 +704,18 @@ public class XmlDoclet implements Doclet {
 	// --- Comment/Tag printing ---
 
 	void printComment(Element element) {
-		DocCommentTree docTree = docTrees.getDocCommentTree(element);
+		Holder own = holder(element);
+		DocCommentTree docTree = own.doc();
 		List<ExecutableElement> overrides = (element instanceof ExecutableElement)
 				? overriddenMethod((ExecutableElement) element) : Collections.emptyList();
 
 		// Lead (first sentence)
-		String text = docTree != null ? docTreeListToString(docTree.getFirstSentence()) : "";
+		String text = docTree != null ? docTreeListToString(docTree.getFirstSentence(), own) : "";
 		if (text.isEmpty() && element instanceof ExecutableElement) {
 			for (ExecutableElement m : overrides) {
-				DocCommentTree mDoc = docTrees.getDocCommentTree(m);
-				if (mDoc != null) {
-					text = docTreeListToString(mDoc.getFirstSentence());
+				Holder inherited = holder(m);
+				if (inherited.doc() != null) {
+					text = docTreeListToString(inherited.doc().getFirstSentence(), inherited);
 					if (!text.isEmpty()) break;
 				}
 			}
@@ -705,12 +729,12 @@ public class XmlDoclet implements Doclet {
 		}
 
 		// Description (full body)
-		text = docTree != null ? docTreeListToString(docTree.getFullBody()) : "";
+		text = docTree != null ? docTreeListToString(docTree.getFullBody(), own) : "";
 		if (text.isEmpty() && element instanceof ExecutableElement) {
 			for (ExecutableElement m : overrides) {
-				DocCommentTree mDoc = docTrees.getDocCommentTree(m);
-				if (mDoc != null) {
-					text = docTreeListToString(mDoc.getFullBody());
+				Holder inherited = holder(m);
+				if (inherited.doc() != null) {
+					text = docTreeListToString(inherited.doc().getFullBody(), inherited);
 					if (!text.isEmpty()) break;
 				}
 			}
@@ -732,7 +756,7 @@ public class XmlDoclet implements Doclet {
 			// For non-methods, just print all tags
 			StringBuilder sb = new StringBuilder();
 			for (DocTree tag : blockTags) {
-				printTag(sb, tag, element);
+				printTag(sb, tag, own);
 			}
 			pw.println(sb);
 			return;
@@ -740,6 +764,7 @@ public class XmlDoclet implements Doclet {
 
 		// Handle inheritance of comments for methods
 		ExecutableElement method = (ExecutableElement) element;
+		Map<DocTree, Holder> owners = new IdentityHashMap<>();
 
 		// Type param tags first
 		List<ParamTree> typeParamTags = new ArrayList<>();
@@ -750,7 +775,7 @@ public class XmlDoclet implements Doclet {
 		}
 		StringBuilder sb = new StringBuilder();
 		for (ParamTree tag : typeParamTags) {
-			printParamTag(sb, tag);
+			printParamTag(sb, tag, own);
 		}
 		pw.println(sb);
 
@@ -772,14 +797,14 @@ public class XmlDoclet implements Doclet {
 					continue;
 				}
 			}
-			ParamTree tag = inheritParamTag(paramName, overrides);
+			ParamTree tag = inheritParamTag(paramName, overrides, owners);
 			if (tag != null) {
 				paramTags.add(j, tag);
 				j++;
 			}
 		}
 		for (ParamTree tag : paramTags) {
-			printParamTag(sb, tag);
+			printParamTag(sb, tag, owners.getOrDefault(tag, own));
 		}
 		pw.println(sb);
 
@@ -792,12 +817,12 @@ public class XmlDoclet implements Doclet {
 			}
 		}
 		if (returnTags.isEmpty() && !"void".equals(method.getReturnType().toString())) {
-			ReturnTree inherited = inheritReturnTag(overrides);
+			ReturnTree inherited = inheritReturnTag(overrides, owners);
 			if (inherited != null) returnTags.add(inherited);
 		}
 		for (ReturnTree rt : returnTags) {
 			sb.append("<return>")
-					.append(html(docTreeListToString(rt.getDescription())))
+					.append(html(docTreeListToString(rt.getDescription(), owners.getOrDefault(rt, own))))
 					.append("</return>\n");
 		}
 		pw.println(sb);
@@ -818,11 +843,11 @@ public class XmlDoclet implements Doclet {
 					continue thrown;
 				}
 			}
-			ThrowsTree tag = inheritThrowsTag(thrownName, overrides);
+			ThrowsTree tag = inheritThrowsTag(thrownName, overrides, owners);
 			if (tag != null) throwsTags.add(tag);
 		}
 		for (ThrowsTree tt : throwsTags) {
-			printThrows(sb, tt);
+			printThrows(sb, tt, owners.getOrDefault(tt, own));
 		}
 		pw.println(sb);
 
@@ -835,21 +860,21 @@ public class XmlDoclet implements Doclet {
 		handled.addAll(throwsTags);
 		for (DocTree tag : blockTags) {
 			if (!handled.contains(tag)) {
-				printTag(sb, tag, element);
+				printTag(sb, tag, own);
 			}
 		}
 		pw.println(sb);
 	}
 
-	void printThrows(StringBuilder sb, ThrowsTree tag) {
+	void printThrows(StringBuilder sb, ThrowsTree tag, Holder holder) {
 		String exName = simplify(tag.getExceptionName().toString());
 		sb.append("<throws name='").append(exName);
 		// Try to resolve the exception type
-		String desc = docTreeListToString(tag.getDescription());
+		String desc = docTreeListToString(tag.getDescription(), holder);
 		sb.append("'>").append(html(desc)).append("</throws>\n");
 	}
 
-	void printParamTag(StringBuilder sb, ParamTree tag) {
+	void printParamTag(StringBuilder sb, ParamTree tag, Holder holder) {
 		String name = tag.getName().toString();
 		sb.append("<param name='");
 		if (tag.isTypeParameter()) {
@@ -859,7 +884,7 @@ public class XmlDoclet implements Doclet {
 		if (tag.isTypeParameter()) {
 			sb.append("&gt;");
 		}
-		String text = docTreeListToString(tag.getDescription());
+		String text = docTreeListToString(tag.getDescription(), holder);
 		if (text.length() == 0)
 			sb.append("'/>\n");
 		else {
@@ -867,23 +892,39 @@ public class XmlDoclet implements Doclet {
 		}
 	}
 
-	void printTag(StringBuilder sb, DocTree tag, Element holder) {
+	void printTag(StringBuilder sb, DocTree tag, Holder holder) {
 		if (tag instanceof ParamTree pt) {
-			printParamTag(sb, pt);
+			printParamTag(sb, pt, holder);
 			return;
 		}
 		if (tag instanceof ThrowsTree tt) {
-			printThrows(sb, tt);
+			printThrows(sb, tt, holder);
 			return;
 		}
 		if (tag instanceof ReturnTree rt) {
 			sb.append("<return>")
-					.append(html(docTreeListToString(rt.getDescription())))
+					.append(html(docTreeListToString(rt.getDescription(), holder)))
 					.append("</return>\n");
 			return;
 		}
 		if (tag instanceof SeeTree st) {
-			printSee(sb, st);
+			printSee(sb, st, holder);
+			return;
+		}
+		if (tag instanceof VersionTree vt) {
+			printVersion(sb, docTreeListToString(vt.getBody(), holder), holder);
+			return;
+		}
+		if (tag instanceof SinceTree st) {
+			printBlockTag(sb, "since", st.getBody(), holder);
+			return;
+		}
+		if (tag instanceof DeprecatedTree dt) {
+			printBlockTag(sb, "deprecated", dt.getBody(), holder);
+			return;
+		}
+		if (tag instanceof AuthorTree at) {
+			printBlockTag(sb, "author", at.getName(), holder);
 			return;
 		}
 		if (tag instanceof UnknownBlockTagTree ubt) {
@@ -892,27 +933,39 @@ public class XmlDoclet implements Doclet {
 				handleSecurityTag(sb, ubt, holder);
 				return;
 			}
-			if (tagName.equals("version")) {
-				sb.append("<version>");
-				Version v = new Version(docTreeListToString(ubt.getContent()));
-				sb.append(v.toSpecificationString());
-				sb.append("</version>");
-				return;
-			}
-			sb.append("<").append(tagName).append(">")
-					.append(html(docTreeListToString(ubt.getContent())))
-					.append("</").append(tagName).append(">");
+			printBlockTag(sb, tagName, ubt.getContent(), holder);
 			return;
 		}
-		// Other block tags
+		// Other block tags, without the tag name that toString() starts with
 		String kind = tag.getKind().name().toLowerCase();
+		String text = tag.toString();
+		if (tag instanceof BlockTagTree bt && text.startsWith("@" + bt.getTagName())) {
+			text = text.substring(bt.getTagName().length() + 1).trim();
+		}
 		sb.append("<").append(kind).append(">")
-				.append(tag.toString())
+				.append(text)
 				.append("</").append(kind).append(">");
 	}
 
-	void handleSecurityTag(StringBuilder sb, UnknownBlockTagTree tag, Element holder) {
-		String s = docTreeListToString(tag.getContent()).replace('\n', ' ').replace('\r', ' ');
+	void printBlockTag(StringBuilder sb, String name, List<? extends DocTree> body, Holder holder) {
+		sb.append("<").append(name).append(">")
+				.append(html(docTreeListToString(body, holder)))
+				.append("</").append(name).append(">");
+	}
+
+	void printVersion(StringBuilder sb, String text, Holder holder) {
+		sb.append("<version>");
+		try {
+			sb.append(new Version(text).toSpecificationString());
+		} catch (IllegalArgumentException e) {
+			warning(holder, "@version is not a version: " + text);
+			sb.append(escape(text));
+		}
+		sb.append("</version>");
+	}
+
+	void handleSecurityTag(StringBuilder sb, UnknownBlockTagTree tag, Holder holder) {
+		String s = docTreeListToString(tag.getContent(), holder).replace('\n', ' ').replace('\r', ' ');
 		Matcher m = SECURITY_PATTERN.matcher(s);
 		if (m.matches()) {
 			String permission = m.group(1);
@@ -935,42 +988,127 @@ public class XmlDoclet implements Doclet {
 				"@security tag invalid: '" + s + "', matching pattern is " + SECURITY_PATTERN + " " + m);
 	}
 
-	void printSee(StringBuilder sb, SeeTree tag) {
-		String text = tag.toString().substring(5).trim(); // Remove "@see "
-		if (text.startsWith("\"")) {
-			sb.append("<a>");
-			sb.append(text.substring(1, text.length() - 1));
-			sb.append("</a>");
-		} else if (text.startsWith("<")) {
-			sb.append(text);
+	void printSee(StringBuilder sb, SeeTree tag, Holder holder) {
+		List<? extends DocTree> reference = tag.getReference();
+		if (reference.isEmpty()) return;
+		DocTree first = reference.get(0);
+		if (first instanceof ReferenceTree ref) {
+			appendLink(sb, holder, ref, reference.subList(1, reference.size()));
+		} else if (first.getKind() == DocTree.Kind.TEXT) {
+			// A quoted string, such as a book title
+			String text = docTreeListToString(reference, holder);
+			if (text.length() > 1 && text.startsWith("\"") && text.endsWith("\"")) {
+				text = text.substring(1, text.length() - 1);
+			}
+			sb.append("<a>").append(text).append("</a>");
 		} else {
-			// Reference - simplified resolution
-			sb.append("<a href='#").append(makeName(text)).append("'>");
-			sb.append(makeName(text));
-			sb.append("</a>");
+			// An HTML link
+			sb.append(docTreeListToString(reference, holder));
+		}
+	}
+
+	// --- Reference resolution ---
+
+	/**
+	 * Write a reference as a link that javadoc2docbook.xsl can resolve. The
+	 * text is the label, if there is one, else the reference itself.
+	 */
+	void appendLink(StringBuilder sb, Holder holder, ReferenceTree reference,
+			List<? extends DocTree> label) {
+		String text = docTreeListToString(label, holder);
+		if (text.isEmpty()) {
+			text = escape(makeName(reference.getSignature()));
+		}
+		Element target = resolve(holder, reference);
+		String href = href(target);
+		if (href == null) {
+			if (target == null) {
+				warning(holder, "reference not found: " + reference.getSignature());
+			}
+			sb.append(text);
+			return;
+		}
+		sb.append("<a href='").append(escape(href)).append("'>").append(text).append("</a>");
+	}
+
+	Element resolve(Holder holder, ReferenceTree reference) {
+		if (holder.doc() == null) return null;
+		TreePath path = docTrees.getPath(holder.element());
+		// Elements from the class path have no source to resolve against
+		if (path == null) return null;
+		return docTrees.getElement(new DocTreePath(new DocTreePath(path, holder.doc()), reference));
+	}
+
+	/**
+	 * The href of a referenced element, in the pkg#qn form that the pqn key of
+	 * javadoc2docbook.xsl matches. The qn is built as print(TypeElement),
+	 * printMethod, printConstructor and printField build it. Returns null for
+	 * elements that have no target in javadoc.xml.
+	 */
+	String href(Element target) {
+		if (target == null) return null;
+		String packageName = elementUtils.getPackageOf(target).getQualifiedName().toString();
+		String ref;
+		switch (target.getKind()) {
+			case PACKAGE :
+				ref = packageName;
+				break;
+			case METHOD :
+			case CONSTRUCTOR : {
+				if (!isTopLevel(target.getEnclosingElement())) return null;
+				ExecutableElement executable = (ExecutableElement) target;
+				String className = executable.getEnclosingElement().getSimpleName().toString();
+				String name = target.getKind() == ElementKind.CONSTRUCTOR ? className
+						: executable.getSimpleName().toString();
+				ref = className + "." + name + flatten(buildSignature(executable), packageName);
+				break;
+			}
+			case FIELD :
+			case ENUM_CONSTANT :
+				if (!isTopLevel(target.getEnclosingElement())) return null;
+				ref = target.getEnclosingElement().getSimpleName() + "." + target.getSimpleName();
+				break;
+			default :
+				if (!isTopLevel(target)) return null;
+				ref = target.getSimpleName().toString();
+				break;
+		}
+		// As in the monorepo doclet, a reference within the package is relative
+		return (packageName.equals(currentPackage) ? "" : packageName) + "#" + ref;
+	}
+
+	// Only top level types are written to javadoc.xml
+	boolean isTopLevel(Element element) {
+		return element instanceof TypeElement
+				&& element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
+	}
+
+	void warning(Holder holder, String message) {
+		if (reporter != null) {
+			reporter.print(Diagnostic.Kind.WARNING, holder.element(), message);
 		}
 	}
 
 	// --- DocTree to string conversion ---
 
-	String docTreeListToString(List<? extends DocTree> trees) {
+	String docTreeListToString(List<? extends DocTree> trees, Holder holder) {
 		if (trees == null || trees.isEmpty()) return "";
 		StringBuilder sb = new StringBuilder();
 		for (DocTree tree : trees) {
-			docTreeToString(sb, tree);
+			docTreeToString(sb, tree, holder);
 		}
 		return sb.toString().trim();
 	}
 
-	void docTreeToString(StringBuilder sb, DocTree tree) {
+	void docTreeToString(StringBuilder sb, DocTree tree, Holder holder) {
 		switch (tree.getKind()) {
 			case TEXT:
 				sb.append(((TextTree) tree).getBody());
 				break;
 			case CODE:
-				sb.append("{@code ");
+				sb.append("<code>");
 				sb.append(escape(((LiteralTree) tree).getBody().getBody()));
-				sb.append("}");
+				sb.append("</code>");
 				break;
 			case LITERAL:
 				sb.append(escape(((LiteralTree) tree).getBody().getBody()));
@@ -978,22 +1116,22 @@ public class XmlDoclet implements Doclet {
 			case LINK:
 			case LINK_PLAIN: {
 				LinkTree link = (LinkTree) tree;
-				String label = docTreeListToString(link.getLabel());
-				sb.append("{@link ");
-				sb.append(link.getReference());
-				if (!label.isEmpty()) {
-					sb.append(" ").append(label);
-				}
-				sb.append("}");
+				appendLink(sb, holder, link.getReference(), link.getLabel());
 				break;
 			}
 			case VALUE: {
 				ValueTree vt = (ValueTree) tree;
-				sb.append("{@value ");
-				if (vt.getReference() != null) {
-					sb.append(vt.getReference());
+				ReferenceTree reference = vt.getReference();
+				// Without a reference the value is that of the documented field
+				Element target = reference == null ? holder.element() : resolve(holder, reference);
+				Object value = target instanceof VariableElement ve ? ve.getConstantValue() : null;
+				if (value == null) {
+					String signature = reference == null ? "" : reference.getSignature();
+					warning(holder, "no constant value for {@value " + signature + "}");
+					sb.append(escape(makeName(signature)));
+				} else {
+					sb.append(escape(constantToString(value)));
 				}
-				sb.append("}");
 				break;
 			}
 			case START_ELEMENT: {
@@ -1012,12 +1150,29 @@ public class XmlDoclet implements Doclet {
 				sb.append("&").append(((EntityTree) tree).getName()).append(";");
 				break;
 			case INHERIT_DOC:
-				sb.append("{@inheritDoc}");
+				sb.append(inheritDoc(holder));
 				break;
 			default:
 				sb.append(tree.toString());
 				break;
 		}
+	}
+
+	/**
+	 * The body of the documentation that a method overrides, as the monorepo
+	 * doclet replaced the inheritDoc tag.
+	 */
+	String inheritDoc(Holder holder) {
+		if (holder.element() instanceof ExecutableElement method) {
+			for (ExecutableElement m : overriddenMethod(method)) {
+				Holder inherited = holder(m);
+				if (inherited.doc() != null) {
+					String text = docTreeListToString(inherited.doc().getFullBody(), inherited);
+					if (!text.isEmpty()) return text;
+				}
+			}
+		}
+		return "<inheritDoc/>";
 	}
 
 	// --- Override inheritance ---
@@ -1062,13 +1217,15 @@ public class XmlDoclet implements Doclet {
 		}
 	}
 
-	ParamTree inheritParamTag(String paramName, List<ExecutableElement> overrides) {
+	ParamTree inheritParamTag(String paramName, List<ExecutableElement> overrides,
+			Map<DocTree, Holder> owners) {
 		for (ExecutableElement m : overrides) {
-			DocCommentTree doc = docTrees.getDocCommentTree(m);
-			if (doc != null) {
-				for (DocTree tag : doc.getBlockTags()) {
+			Holder inherited = holder(m);
+			if (inherited.doc() != null) {
+				for (DocTree tag : inherited.doc().getBlockTags()) {
 					if (tag instanceof ParamTree pt && !pt.isTypeParameter()
 							&& paramName.equals(pt.getName().toString())) {
+						owners.put(pt, inherited);
 						return pt;
 					}
 				}
@@ -1077,14 +1234,16 @@ public class XmlDoclet implements Doclet {
 		return null;
 	}
 
-	ThrowsTree inheritThrowsTag(String throwsName, List<ExecutableElement> overrides) {
+	ThrowsTree inheritThrowsTag(String throwsName, List<ExecutableElement> overrides,
+			Map<DocTree, Holder> owners) {
 		for (ExecutableElement m : overrides) {
-			DocCommentTree doc = docTrees.getDocCommentTree(m);
-			if (doc != null) {
-				for (DocTree tag : doc.getBlockTags()) {
+			Holder inherited = holder(m);
+			if (inherited.doc() != null) {
+				for (DocTree tag : inherited.doc().getBlockTags()) {
 					if (tag instanceof ThrowsTree tt) {
 						String name = throwsTypeName(tt);
 						if (throwsName.equals(name)) {
+							owners.put(tt, inherited);
 							return tt;
 						}
 					}
@@ -1094,12 +1253,14 @@ public class XmlDoclet implements Doclet {
 		return null;
 	}
 
-	ReturnTree inheritReturnTag(List<ExecutableElement> overrides) {
+	ReturnTree inheritReturnTag(List<ExecutableElement> overrides,
+			Map<DocTree, Holder> owners) {
 		for (ExecutableElement m : overrides) {
-			DocCommentTree doc = docTrees.getDocCommentTree(m);
-			if (doc != null) {
-				for (DocTree tag : doc.getBlockTags()) {
+			Holder inherited = holder(m);
+			if (inherited.doc() != null) {
+				for (DocTree tag : inherited.doc().getBlockTags()) {
 					if (tag instanceof ReturnTree rt) {
+						owners.put(rt, inherited);
 						return rt;
 					}
 				}
@@ -1205,10 +1366,14 @@ public class XmlDoclet implements Doclet {
 	}
 
 	String simplify(String name) {
-		if (name.equals(currentPackage))
+		return simplify(name, currentPackage);
+	}
+
+	String simplify(String name, String pkg) {
+		if (name.equals(pkg))
 			return name;
 
-		if (name.startsWith("java.") || name.startsWith("org.osgi.") || name.startsWith(currentPackage)) {
+		if (name.startsWith("java.") || name.startsWith("org.osgi.") || name.startsWith(pkg)) {
 			int n;
 			if (name.endsWith(".class")) {
 				n = name.lastIndexOf('.', name.length() - 7);
@@ -1222,6 +1387,11 @@ public class XmlDoclet implements Doclet {
 	}
 
 	String flatten(String signature) {
+		return flatten(signature, currentPackage);
+	}
+
+	// Simplifies as if printing pkg, so a reference matches the target's qn
+	String flatten(String signature, String pkg) {
 		List<String> parts = new ArrayList<>();
 
 		int i = 1;
@@ -1256,7 +1426,7 @@ public class XmlDoclet implements Doclet {
 		sb.append("(");
 		for (String s : parts) {
 			sb.append(del);
-			sb.append(simplify(s));
+			sb.append(simplify(s, pkg));
 			del = ",";
 		}
 		sb.append(")");
