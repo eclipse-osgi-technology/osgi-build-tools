@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (c) 2026 Contributors to the Eclipse Foundation.
+
+  This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License 2.0
+  which is available at https://www.eclipse.org/legal/epl-2.0/
+  SPDX-License-Identifier: EPL-2.0
+
+  Contributors:
+-->
+<!-- A chapter with varargs methods, see VarargsTest -->
+<chapter label="997"
+         version="5.0" xml:id="service.varargs"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+  <title>Varargs Test Specification</title>
+
+  <info>
+    <releaseinfo><xref endterm="org.osgi.service.varargs-version"
+    linkend="org.osgi.service.varargs"/></releaseinfo>
+  </info>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>The package of this chapter has varargs methods, such as <xref
+    linkend="org.osgi.service.varargs.Varargs.names-String...-"
+    xrefstyle="hyperlink"/>, linked by the id they have in the published
+    specifications.</para>
+  </section>
+
+  <xi:include href="javadoc/org.osgi.service.varargs.xml"/>
+</chapter>

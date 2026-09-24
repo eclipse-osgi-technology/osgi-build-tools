@@ -619,7 +619,7 @@ public class XmlDoclet implements Doclet {
 				+ "' modifiers='"
 				+ modifiersString(method)
 				+ "' typeName='"
-				+ printType(returnType)
+				+ printType(elementType(returnType))
 				+ "' qualifiedTypeName='"
 				+ escape(qualifiedTypeName(returnType))
 				+ "' typeArgs='"
@@ -681,7 +681,7 @@ public class XmlDoclet implements Doclet {
 				+ "' modifiers='"
 				+ modifiersString(field)
 				+ "' typeName='"
-				+ printType(fieldType)
+				+ printType(elementType(fieldType))
 				+ "' qualifiedTypeName='"
 				+ escape(qualifiedTypeName(fieldType))
 				+ "' dimension='"
@@ -711,10 +711,13 @@ public class XmlDoclet implements Doclet {
 
 	void printParameter(VariableElement param, boolean vararg) {
 		TypeMirror paramType = param.asType();
-		String dimension = vararg ? "..." : getDimension(paramType);
+		// A varargs parameter is an array of its declared type
+		String dimension = vararg
+				? getDimension(((ArrayType) paramType).getComponentType()) + "..."
+				: getDimension(paramType);
 
 		pw.println("    <parameter name='" + param.getSimpleName() + "' dimension='"
-				+ dimension + "' typeName='" + printType(paramType, 1)
+				+ dimension + "' typeName='" + printType(elementType(paramType), 1)
 				+ "' fqn='" + escape(qualifiedTypeName(paramType))
 				+ "' varargs='" + vararg + "'/>");
 	}
@@ -1321,9 +1324,17 @@ public class XmlDoclet implements Doclet {
 	String buildSignature(ExecutableElement method) {
 		StringBuilder sb = new StringBuilder("(");
 		String del = "";
-		for (VariableElement param : method.getParameters()) {
+		List<? extends VariableElement> parameters = method.getParameters();
+		for (int i = 0; i < parameters.size(); i++) {
 			sb.append(del);
-			sb.append(param.asType().toString());
+			TypeMirror type = parameters.get(i).asType();
+			if (method.isVarArgs() && i == parameters.size() - 1) {
+				// Type... as ExecutableMemberDoc.signature() wrote it, which the
+				// published anchor ids use
+				sb.append(((ArrayType) type).getComponentType()).append("...");
+			} else {
+				sb.append(type);
+			}
 			del = ",";
 		}
 		sb.append(")");
@@ -1331,10 +1342,19 @@ public class XmlDoclet implements Doclet {
 	}
 
 	String getDimension(TypeMirror type) {
-		if (type.getKind() == TypeKind.ARRAY) {
-			return "[]";
+		StringBuilder sb = new StringBuilder();
+		for (; type.getKind() == TypeKind.ARRAY; type = ((ArrayType) type).getComponentType()) {
+			sb.append("[]");
 		}
-		return "";
+		return sb.toString();
+	}
+
+	// The type without the array dimensions, which are written separately
+	TypeMirror elementType(TypeMirror type) {
+		while (type.getKind() == TypeKind.ARRAY) {
+			type = ((ArrayType) type).getComponentType();
+		}
+		return type;
 	}
 
 	String qualifiedTypeName(TypeMirror type) {
