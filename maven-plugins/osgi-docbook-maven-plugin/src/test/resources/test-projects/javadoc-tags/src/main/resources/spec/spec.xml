@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (c) 2026 Contributors to the Eclipse Foundation.
+
+  This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License 2.0
+  which is available at https://www.eclipse.org/legal/epl-2.0/
+  SPDX-License-Identifier: EPL-2.0
+
+  Contributors:
+-->
+<!-- A chapter with one small example for each kind of Javadoc tag, see JavadocTagsTest -->
+<chapter label="999"
+         version="5.0" xml:id="service.tags"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+  <title>Javadoc Tags Test Specification</title>
+
+  <info>
+    <releaseinfo><xref endterm="org.osgi.service.tags-version"
+    linkend="org.osgi.service.tags"/></releaseinfo>
+  </info>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>The packages of this chapter show how the Javadoc tags in their
+    comments are rendered.</para>
+  </section>
+
+  <xi:include href="javadoc/org.osgi.service.tags.xml"/>
+
+  <xi:include href="javadoc/org.osgi.service.tags.other.xml"/>
+</chapter>

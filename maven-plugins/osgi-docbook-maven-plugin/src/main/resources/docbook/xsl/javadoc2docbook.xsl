@@ -494,11 +494,22 @@ version="2.0">
       </xsl:variable>
 
       <xsl:variable name="target" select="key('pqn', $key)"/>
+      <xsl:variable name="href.package" select="substring-before($key, '#')"/>
+      <xsl:variable name="href.member" select="substring-after($key, '#')"/>
 
       <xsl:variable name="linkend">
         <xsl:choose>
           <xsl:when test="count($target) = 0 and (starts-with(@href, 'java') or starts-with(@href, 'jakarta'))">
             <!-- external link is not active -->
+          </xsl:when>
+          <xsl:when test="count($target) = 0 and not(ancestor::top/package[@name = $href.package])">
+            <!-- The package is in another specification: use the id it has
+                 there, which the HTML output links to the published page -->
+            <xsl:call-template name="clean.id">
+              <xsl:with-param name="string"
+                  select="if ($href.member = $href.package) then $href.package
+                          else concat($href.package, '.', $href.member)"/>
+            </xsl:call-template>
           </xsl:when>
           <xsl:when test="count($target) = 0">
             <xsl:message>
