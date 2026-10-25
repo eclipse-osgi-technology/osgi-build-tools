@@ -18,11 +18,13 @@
 package org.eclipse.osgi.technology.buildtools.maven.docbook.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.maven.api.plugin.testing.Basedir;
 import org.apache.maven.api.plugin.testing.InjectMojo;
@@ -37,11 +39,17 @@ import org.junit.jupiter.api.Test;
 @MojoTest
 class PDFGenerationTest {
 
+    /** A page sequence on a draft page master, which has the watermark */
+    private static final Pattern DRAFT = Pattern
+            .compile("<fo:page-sequence [^>]*master-reference=\"[a-z-]+-draft\"");
+
     @Test
     @InjectMojo(goal = "pdf")
     @Basedir("/test-projects/simple")
     public void testPdf(OsgiSpecPdfMojo mojo) throws Exception {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        // the test harness does not take the version of the POM
+        project.setVersion("1.0-SNAPSHOT");
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
         mojo.execute();
@@ -60,5 +68,22 @@ class PDFGenerationTest {
         }
         assertTrue(Files.readString(attached.get(1).getFile().toPath(), java.nio.charset.StandardCharsets.ISO_8859_1)
                 .startsWith("%PDF-"), "Not a PDF");
+
+        String fo = Files.readString(attached.get(0).getFile().toPath());
+        assertTrue(DRAFT.matcher(fo).find(), "a snapshot is no draft");
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
+    public void testReleaseIsFinal(OsgiSpecPdfMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setVersion("1.0.0");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        mojo.execute();
+
+        String fo = Files.readString(project.getAttachedArtifacts().get(0).getFile().toPath());
+        assertFalse(DRAFT.matcher(fo).find(), "a release is a draft");
     }
 }

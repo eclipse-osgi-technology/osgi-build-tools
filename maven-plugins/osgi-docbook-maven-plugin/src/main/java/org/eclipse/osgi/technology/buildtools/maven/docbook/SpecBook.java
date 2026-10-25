@@ -34,6 +34,8 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -55,6 +57,8 @@ import org.xml.sax.ext.EntityResolver2;
 final class SpecBook {
 
     static final String INTERNAL_BOOK = "internal:/book";
+
+    private static final String INTERNAL_PROFILE = "internal:/profile";
 
     private static final Logger LOG = LoggerFactory.getLogger(SpecBook.class);
 
@@ -137,6 +141,39 @@ final class SpecBook {
         } catch (ParserConfigurationException | SAXException e) {
             LOG.error("Failed to create the book parser", e);
             throw new MojoExecutionException("Failed to create the book parser", e);
+        }
+    }
+
+    /**
+     * The book with all includes resolved and profiled as the monorepo build
+     * did: without comments and the content of the other status (draft or
+     * final), and with the copyright year.
+     *
+     * @param draftMode {@code yes} or {@code no}
+     * @param copyrightYear the years of the copyright line, or null
+     * @return the profiled book
+     * @throws MojoExecutionException
+     */
+    DOMSource profiled(String draftMode, String copyrightYear) throws MojoExecutionException {
+        try {
+            ClasspathStylesheetResolver resolver = new ClasspathStylesheetResolver(INTERNAL_PROFILE,
+                    "custom-profile.xsl");
+            TransformerFactory transformerFactory = AbstractOsgiSpecMojo.newTransformerFactory();
+            transformerFactory.setURIResolver(resolver);
+            Transformer transformer = transformerFactory.newTransformer(resolver.stylesheet());
+            transformer.setParameter("draft.mode", draftMode);
+            if (copyrightYear != null && !copyrightYear.isBlank()) {
+                transformer.setParameter("copyright.year", copyrightYear);
+            }
+
+            SAXSource source = source(resolver);
+            DOMResult result = new DOMResult();
+            transformer.transform(source, result);
+            LOG.info("Book profiled with draft.mode {}", draftMode);
+            return new DOMSource(result.getNode(), INTERNAL_BOOK);
+        } catch (TransformerException e) {
+            LOG.error("Failed to profile the book", e);
+            throw new MojoExecutionException("Failed to profile the specification book", e);
         }
     }
 

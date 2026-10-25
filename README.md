@@ -148,6 +148,7 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.html.externalLinks` | `true` | Link references outside the book to the published specifications; `false` renders them as text |
 | `osgi.docbook.html.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | The URL that the book paths of the link index are relative to |
 | `osgi.docbook.html.externalLinkIndex` | none | A link index file to use instead of the bundled one |
+| `osgi.docbook.draft` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
 
 For example:
 

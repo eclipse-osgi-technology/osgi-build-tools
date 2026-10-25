@@ -51,6 +51,17 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
     @Parameter(property = "osgi.docbook.spec.title", defaultValue = "${project.name}")
     String specTitle;
 
+    /**
+     * {@code yes} for a draft (watermark, remarks, draft content), {@code no}
+     * for a final specification; by default a {@code -SNAPSHOT} is a draft.
+     */
+    @Parameter(property = "osgi.docbook.draft")
+    String draftMode;
+
+    /** The years of the copyright line, e.g. {@code 2000, 2022}; by default those of the book */
+    @Parameter(property = "osgi.docbook.copyright.year")
+    String copyrightYear;
+
     @Inject
     MavenProject project;
 
@@ -77,6 +88,10 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
         if(specTitle == null || specTitle.isBlank() || "null".equals(specTitle)) {
             LOG.error("No specification title");
             throw new MojoFailureException("A specification title must be supplied. It will default to the project name if that is available");
+        }
+
+        if (draftMode == null || draftMode.isBlank()) {
+            draftMode = project.getVersion().endsWith("-SNAPSHOT") ? "yes" : "no";
         }
 
         outputFileBaseName = project.getBuild().getFinalName();
