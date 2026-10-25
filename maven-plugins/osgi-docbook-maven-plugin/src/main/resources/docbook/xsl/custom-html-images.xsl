@@ -19,11 +19,18 @@
   xmlns:d="http://docbook.org/ns/docbook"
   version="3.0">
 
+<xsl:include href="custom-html-image-name.xsl"/>
 <xsl:output method="text" encoding="UTF-8"/>
 
 <xsl:template match="/">
-  <xsl:for-each select="distinct-values(//d:imagedata[@fileref]/resolve-uri(@fileref, base-uri(.)))">
-    <xsl:value-of select="."/>
+  <!-- one line per image: its URI, a tab and its file name in images/;
+       OsgiSpecHtmlMojo drops repeated lines -->
+  <xsl:for-each select="//d:imagedata[@fileref][not(contains(@fileref, ':'))]">
+    <xsl:value-of select="resolve-uri(@fileref, base-uri(.))"/>
+    <xsl:text>&#9;</xsl:text>
+    <xsl:call-template name="osgi.image.filename">
+      <xsl:with-param name="fileref" select="@fileref"/>
+    </xsl:call-template>
     <xsl:text>&#xa;</xsl:text>
   </xsl:for-each>
 </xsl:template>

@@ -148,7 +148,11 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.html.externalLinks` | `true` | Link references outside the book to the published specifications; `false` renders them as text |
 | `osgi.docbook.html.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | The URL that the book paths of the link index are relative to |
 | `osgi.docbook.html.externalLinkIndex` | none | A link index file to use instead of the bundled one |
+| `osgi.docbook.html.rootFilename` | `index` | File name of the page with the title and table of contents; the published books use `toc` |
+| `osgi.docbook.html.chapterImageNames` | `false` | Prefix SVG image names with the chapter label (`002-delegation-model.svg`), as the published books do; a complete book needs this when chapters use the same file name |
+| `osgi.docbook.html.rasterizeImages` | `false` | Convert SVG images into PNG images (scale 2, 300 dpi), as the published books do |
 | `osgi.docbook.draft` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
+| `osgi.docbook.release.version` | `${project.version}` | The release shown in the HTML page titles, e.g. `8` |
 
 For example:
 

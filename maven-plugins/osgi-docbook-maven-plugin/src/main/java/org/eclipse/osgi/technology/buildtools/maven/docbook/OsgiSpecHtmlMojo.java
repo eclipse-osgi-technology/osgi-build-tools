@@ -40,6 +40,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.osgi.tools.rasterizer.Rasterizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +86,29 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     /** The URL that the paths in the external link index are relative to */
     @Parameter(property = "osgi.docbook.html.externalLinkBaseUrl", defaultValue = "https://docs.osgi.org/specification/")
     String externalLinkBaseUrl;
+
+    /**
+     * The file name of the page with the title and the table of contents. The
+     * published books use {@code toc}: their {@code index.html} is the first
+     * page of the front matter.
+     */
+    @Parameter(property = "osgi.docbook.html.rootFilename", defaultValue = "index")
+    String rootFilename;
+
+    /**
+     * Prefix the file names of SVG images with the label of their chapter
+     * ({@code 002-delegation-model.svg}), as the published specifications do.
+     * Chapters may use the same file name, so a complete book needs this.
+     */
+    @Parameter(property = "osgi.docbook.html.chapterImageNames", defaultValue = "false")
+    boolean chapterImageNames;
+
+    /**
+     * Convert the SVG images into PNG images (scale 2, 300 dpi), as the
+     * published specifications do.
+     */
+    @Parameter(property = "osgi.docbook.html.rasterizeImages", defaultValue = "false")
+    boolean rasterizeImages;
 
     /** An external link index to use instead of the bundled one */
     @Parameter(property = "osgi.docbook.html.externalLinkIndex")
@@ -134,7 +158,9 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             Path mainOutput = htmlDir.resolveSibling("html.txt");
             transformer.setParameter("webhelp.base.dir", htmlDir.getFileName().toString());
             transformer.setParameter("webhelp.default.topic", "index.html");
-            transformer.setParameter("release.version", project.getVersion());
+            transformer.setParameter("release.version", releaseVersion);
+            transformer.setParameter("root.filename", rootFilename);
+            imageParameters(transformer);
             transformer.setParameter("draft.mode", draftMode);
             transformer.setParameter("chunker.output.encoding", "UTF-8");
             if (externalLinks) {
@@ -160,22 +186,26 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             TransformerFactory transformerFactory = newTransformerFactory();
             transformerFactory.setURIResolver(resolver);
             transformerFactory.setFeature(FeatureKeys.XINCLUDE, true);
-            transformerFactory.newTransformer(resolver.stylesheet())
-                    .transform(book.profiled(draftMode, copyrightYear), new StreamResult(sw));
+            Transformer transformer = transformerFactory.newTransformer(resolver.stylesheet());
+            imageParameters(transformer);
+            transformer.transform(book.profiled(draftMode, copyrightYear), new StreamResult(sw));
         } catch (TransformerException e) {
             LOG.error("Failed to list the OSGi specification images", e);
             throw new MojoExecutionException("Failed to list the OSGi specification images", e);
         }
 
         Path imagesDir = htmlDir.resolve("images");
-        // The pages refer to images by file name only, see custom-html.xsl
+        // The pages refer to images by file name only, see
+        // custom-html-image-name.xsl; each line is the URI, a tab and the name
         Map<String, String> copied = new HashMap<>();
+        Rasterizer rasterizer = null;
         for (String line : sw.toString().split("\n")) {
-            String uri = line.strip();
-            if (uri.isEmpty()) {
+            if (line.isBlank()) {
                 continue;
             }
-            String name = uri.substring(uri.lastIndexOf('/') + 1);
+            String[] parts = line.strip().split("\t");
+            String uri = parts[0];
+            String name = parts.length > 1 ? parts[1] : uri.substring(uri.lastIndexOf('/') + 1);
             String previous = copied.putIfAbsent(name, uri);
             if (previous != null) {
                 if (!previous.equals(uri)) {
@@ -183,14 +213,29 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
                 }
                 continue;
             }
-            try (InputStream is = URI.create(uri).toURL().openStream()) {
-                copy(is, imagesDir.resolve(name));
-            } catch (IOException | IllegalArgumentException e) {
+            try {
+                if (name.endsWith(".png") && uri.endsWith(".svg")) {
+                    if (rasterizer == null) {
+                        rasterizer = new Rasterizer(OsgiSpecPdfMojo.extractFonts(
+                                baseDir.resolve(project.getBuild().getDirectory()).resolve("spec/fonts")));
+                    }
+                    rasterizer.rasterize(Path.of(URI.create(uri)), imagesDir.resolve(name), 2f, 300f);
+                } else {
+                    try (InputStream is = URI.create(uri).toURL().openStream()) {
+                        copy(is, imagesDir.resolve(name));
+                    }
+                }
+            } catch (Exception e) {
                 LOG.error("Failed to copy image {}", uri, e);
                 throw new MojoExecutionException("Failed to copy image " + uri, e);
             }
         }
         LOG.debug("Copied {} images", copied.size());
+    }
+
+    private void imageParameters(Transformer transformer) {
+        transformer.setParameter("image.chapter.prefix", chapterImageNames ? 1 : 0);
+        transformer.setParameter("image.rasterize", rasterizeImages ? 1 : 0);
     }
 
     private void copyStaticResources(Path htmlDir) throws MojoExecutionException {
