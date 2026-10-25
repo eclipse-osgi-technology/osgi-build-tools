@@ -11,6 +11,8 @@
 
 package org.osgi.service.tags;
 
+import java.io.IOException;
+
 // Only imported here, so references to it resolve in the scope of this type
 import org.osgi.service.tags.other.Remote;
 
@@ -27,4 +29,11 @@ public interface InheritBase {
      *         key.
      */
     int lookup(String key) throws IllegalArgumentException;
+
+    /**
+     * Read a value.
+     *
+     * @throws IOException If reading fails.
+     */
+    void read() throws IOException;
 }

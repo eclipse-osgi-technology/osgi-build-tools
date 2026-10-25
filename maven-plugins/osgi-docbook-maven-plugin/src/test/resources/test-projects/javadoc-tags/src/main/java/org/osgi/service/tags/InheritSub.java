@@ -11,6 +11,8 @@
 
 package org.osgi.service.tags;
 
+import java.io.IOException;
+
 /**
  * A type that inherits documentation.
  */
@@ -21,5 +23,9 @@ public class InheritSub implements InheritBase {
     @Override
     public int lookup(String key) throws IllegalArgumentException {
         return 0;
+    }
+
+    @Override
+    public void read() throws IOException {
     }
 }

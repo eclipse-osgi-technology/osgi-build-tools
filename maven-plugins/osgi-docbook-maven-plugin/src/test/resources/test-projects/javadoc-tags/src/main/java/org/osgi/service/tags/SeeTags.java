@@ -21,6 +21,7 @@ package org.osgi.service.tags;
  * @see org.osgi.service.tags.other
  * @see "OSGi Core Release 8"
  * @see <a href="https://docs.osgi.org">OSGi Specifications</a>
+ * @see org.osgi.service.unknown.Missing#VALUE
  */
 public class SeeTags {
     /**
