@@ -71,6 +71,12 @@ class PDFGenerationTest {
 
         String fo = Files.readString(attached.get(0).getFile().toPath());
         assertTrue(DRAFT.matcher(fo).find(), "a snapshot is no draft");
+
+        // the OSGi fonts draw an ornament for these: Arial Unicode
+        assertTrue(fo.matches("(?s).*<fo:inline [^>]*font-family=\"ArialUnicodeMS\">\u2126</fo:inline>.*"),
+                "Ohm sign not in Arial");
+        assertTrue(fo.matches("(?s).*<fo:inline [^>]*font-family=\"ArialUnicodeMS\">\u03a9</fo:inline>.*"),
+                "Omega not in Arial");
     }
 
     @Test

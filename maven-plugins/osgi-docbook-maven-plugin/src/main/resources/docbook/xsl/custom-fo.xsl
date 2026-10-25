@@ -2118,10 +2118,26 @@ should be discarded -->
   <xsl:apply-templates select="node()"/>
 </xsl:template>
 
+<!-- The OSGi fonts claim the ohm sign and the omega, but draw an ornament
+     (Productus) or a superscript five (Proforma) for them, so FOP never falls
+     back to another font: these come from Arial Unicode. -->
+<xsl:template match="text()[contains(., '&#x2126;') or contains(., '&#x3A9;')]"
+              mode="#all" priority="10" version="2.0">
+  <xsl:analyze-string select="." regex="[&#x2126;&#x3A9;]+">
+    <xsl:matching-substring>
+      <fo:inline font-family="ArialUnicodeMS"><xsl:value-of select="."/></fo:inline>
+    </xsl:matching-substring>
+    <xsl:non-matching-substring>
+      <xsl:value-of select="."/>
+    </xsl:non-matching-substring>
+  </xsl:analyze-string>
+</xsl:template>
+
 <xsl:template name="back.cover">
   <xsl:call-template name="page.sequence">
     <xsl:with-param name="content">
-      <fo:block break-after="page"/>
+      <!-- a blank page first: FOP 2 drops an empty block with its break -->
+      <fo:block break-after="page">&#xA0;</fo:block>
       <fo:block xsl:use-attribute-sets="end.of.document.properties">
         <xsl:copy-of select="$end.of.document.message"/>
       </fo:block>
