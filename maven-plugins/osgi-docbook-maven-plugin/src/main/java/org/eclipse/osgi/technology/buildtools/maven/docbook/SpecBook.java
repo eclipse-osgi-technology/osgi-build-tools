@@ -67,13 +67,28 @@ final class SpecBook {
     /**
      * Legacy include path for schema listings, e.g.
      * .../generated/xmlns/scr/v1.5.0/scr.xsd or
-     * .../generated/json.schema/featurelauncher/v1.0.0/bundle-start-levels.json.
-     * The monorepo build copied these into generated/; in a specification
-     * repository the sources live under xmlns/ or json.schema/ at the
-     * repository root, so the mapped path is searched upwards from the spec
-     * file's directory.
+     * .../generated/json.schema/featurelauncher/v1.0.0/bundle-start-levels.json,
+     * and for the tree summary of the Residential Device Management Tree,
+     * .../generated/residentialdmt/treesummary.xml. The monorepo build copied
+     * or generated these into generated/; in a specification repository they
+     * live under xmlns/, json.schema/ or residentialdmt/ at the repository
+     * root, so the mapped path is searched upwards from the spec file's
+     * directory.
      */
-    private static final Pattern LEGACY_RESOURCE = Pattern.compile(".*generated/((?:xmlns|json\\.schema)/.+)");
+    private static final Pattern LEGACY_RESOURCE = Pattern
+            .compile(".*generated/((?:xmlns|json\\.schema|residentialdmt)/.+)");
+
+    /** Everything before the schema element of an XSD: prolog and licence comment */
+    private static final Pattern SCHEMA_PROLOG = Pattern.compile("(?s).*(<(\\w+:)?schema)");
+
+    /**
+     * The text of a schema listing: an XSD without what precedes its schema
+     * element, as the monorepo build listed it.
+     */
+    private static String schemaListing(Path p) throws IOException {
+        String text = Files.readString(p);
+        return p.getFileName().toString().endsWith(".xsd") ? SCHEMA_PROLOG.matcher(text).replaceFirst("$1") : text;
+    }
 
     private final Path specFile;
     private final Path specDir;
@@ -243,7 +258,9 @@ final class SpecBook {
                                 p = dir.resolve(m.group(1));
                                 if (Files.exists(p)) {
                                     LOG.debug("File found via legacy resource mapping {}", p);
-                                    return inputSource(p);
+                                    InputSource is = new InputSource(new StringReader(schemaListing(p)));
+                                    is.setSystemId(p.toUri().toASCIIString());
+                                    return is;
                                 }
                             }
                         }

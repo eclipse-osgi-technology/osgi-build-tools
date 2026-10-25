@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    legacy-xmlns-licence-marker: the licence comment is not listed
+-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
     targetNamespace="https://osgi.example/xmlns/test/v1.0.0">
     <xs:element name="legacy-xmlns-marker" type="xs:string"/>
