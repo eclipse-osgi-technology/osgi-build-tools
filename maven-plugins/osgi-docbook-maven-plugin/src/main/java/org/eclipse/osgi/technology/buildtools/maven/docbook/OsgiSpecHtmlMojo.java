@@ -135,6 +135,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             transformer.setParameter("webhelp.base.dir", htmlDir.getFileName().toString());
             transformer.setParameter("webhelp.default.topic", "index.html");
             transformer.setParameter("release.version", project.getVersion());
+            transformer.setParameter("draft.mode", draftMode);
             transformer.setParameter("chunker.output.encoding", "UTF-8");
             if (externalLinks) {
                 transformer.setParameter("external.links.index", externalLinkIndex != null
@@ -144,7 +145,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
 
             StreamResult result = new StreamResult(mainOutput.toFile());
             result.setSystemId(mainOutput.toUri().toString());
-            transformer.transform(book.source(resolver), result);
+            transformer.transform(book.profiled(draftMode, copyrightYear), result);
         } catch (TransformerException e) {
             LOG.error("Failed to create the OSGi specification HTML", e);
             throw new MojoExecutionException("Failed to create the OSGi specification HTML", e);
@@ -160,7 +161,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             transformerFactory.setURIResolver(resolver);
             transformerFactory.setFeature(FeatureKeys.XINCLUDE, true);
             transformerFactory.newTransformer(resolver.stylesheet())
-                    .transform(book.source(resolver), new StreamResult(sw));
+                    .transform(book.profiled(draftMode, copyrightYear), new StreamResult(sw));
         } catch (TransformerException e) {
             LOG.error("Failed to list the OSGi specification images", e);
             throw new MojoExecutionException("Failed to list the OSGi specification images", e);

@@ -96,12 +96,13 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
             // We want the FO file to be complete
             transformerFactory.setFeature(FeatureKeys.XINCLUDE, true);
             Transformer transformer = transformerFactory.newTransformer(resolver.stylesheet());
+            transformer.setParameter("draft.mode", draftMode);
 
             LOG.debug("Loaded OSGi specification docbook to FO transformer");
 
             Path outputPath = buildDir.resolve(outputFileBaseName + ".fo");
             try (Writer output = Files.newBufferedWriter(outputPath, CREATE, TRUNCATE_EXISTING)) {
-                transformer.transform(book.source(resolver), new StreamResult(output));
+                transformer.transform(book.profiled(draftMode, copyrightYear), new StreamResult(output));
                 LOG.debug("Created OSGi specification FO file");
             }
             return outputPath;

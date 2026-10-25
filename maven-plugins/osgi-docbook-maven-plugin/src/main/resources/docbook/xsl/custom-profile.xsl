@@ -7,7 +7,7 @@
   exclude-result-prefixes="exsl"
   version="1.0">
 
-<xsl:import href="../../../licensed/docbook-xsl-ns/profiling/profile.xsl"/>
+<xsl:import href="../docbook-xsl/profiling/profile.xsl"/>
 
 <xsl:param name="draft.mode">yes</xsl:param>
 
