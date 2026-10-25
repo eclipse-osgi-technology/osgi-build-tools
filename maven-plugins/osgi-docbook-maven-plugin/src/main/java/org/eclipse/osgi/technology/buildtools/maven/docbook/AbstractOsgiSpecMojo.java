@@ -17,9 +17,11 @@
  *******************************************************************************/
 package org.eclipse.osgi.technology.buildtools.maven.docbook;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.xml.transform.TransformerConfigurationException;
@@ -61,6 +63,14 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
     /** The years of the copyright line, e.g. {@code 2000, 2022}; by default those of the book */
     @Parameter(property = "osgi.docbook.copyright.year")
     String copyrightYear;
+
+    /**
+     * The sources of the API to document, e.g. {@code ../api/src/main/java}
+     * for a specification module next to the API module. Roots that do not
+     * exist are ignored; without any, the compile source roots are documented.
+     */
+    @Parameter
+    List<File> apiSourceRoots;
 
     /** The release shown in the HTML page titles, e.g. {@code 8} */
     @Parameter(property = "osgi.docbook.release.version", defaultValue = "${project.version}")
@@ -114,7 +124,8 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to create " + formatDir, e);
         }
 
-        new SpecJavadoc(project, baseDir, specDir.resolve("javadoc")).generate(newTransformerFactory());
+        new SpecJavadoc(project, SpecJavadoc.sourceRoots(project, baseDir, apiSourceRoots),
+                specDir.resolve("javadoc")).generate(newTransformerFactory());
 
         SpecBook book = SpecBook.setup(baseDir.resolve(chapterSource), specDir, specTitle,
                 project.getVersion(), newTransformerFactory());

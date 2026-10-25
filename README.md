@@ -55,8 +55,9 @@ is built at
 ## Use the DocBook plugin
 
 After installing this repository locally, add the plugin to a specification
-project. It has two goals, `pdf` and `html`, which both run in the `compile`
-phase. Bind the goals for the formats you need:
+project. Its goals `pdf` and `html` both run in the `compile` phase; the
+`docbook` goal, which packages the DocBook for a book, is described below.
+Bind the goals for the formats you need:
 
 ```xml
 <build>
@@ -153,6 +154,7 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.html.rasterizeImages` | `false` | Convert SVG images into PNG images (scale 2, 300 dpi), as the published books do |
 | `osgi.docbook.draft` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
 | `osgi.docbook.release.version` | `${project.version}` | The release shown in the HTML page titles, e.g. `8` |
+| `osgi.docbook.docbook.skip` | `false` | Skip the `docbook` goal |
 
 For example:
 
@@ -174,6 +176,38 @@ The corresponding command-line properties are:
 mvn compile \
 	-Dosgi.docbook.spec.source=src/main/resources/spec/custom-spec.xml \
 	-Dosgi.docbook.spec.title="My OSGi Specification"
+```
+
+### DocBook archive of a specification project
+
+The `docbook` goal (phase `package`) packages what a book needs from a
+specification project, and attaches it with the classifier `docbook` and type
+`zip`:
+
+```text
+chapters/<xml:id>/<xml:id>.xml   a chapter, with its images and included files
+javadoc/<package>.xml            the javadoc of a package of the project
+resources/xmlns/..., json.schema/..., residentialdmt/...   listings the chapters include
+META-INF/docbook.properties      the chapters and packages
+```
+
+The includes of the chapters are rewritten to this layout. A project without
+a chapter packs only its javadoc, which chapters of other projects include.
+More chapters of the same project can be added with `chapterSources`.
+
+The javadoc covers the compile source roots of the project, or with
+`apiSourceRoots` the sources of the API, e.g. of the API module next to a
+specification module with packaging `pom`:
+
+```xml
+<configuration>
+	<chapterSources>
+		<chapterSource>service.cm/spec.xml</chapterSource>
+	</chapterSources>
+	<apiSourceRoots>
+		<apiSourceRoot>${project.basedir}/../api/src/main/java</apiSourceRoot>
+	</apiSourceRoots>
+</configuration>
 ```
 
 ## Development
