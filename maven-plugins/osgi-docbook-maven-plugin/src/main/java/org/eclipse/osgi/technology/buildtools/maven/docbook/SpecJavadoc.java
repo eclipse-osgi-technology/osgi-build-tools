@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -61,18 +63,41 @@ final class SpecJavadoc {
     private static final Logger LOG = LoggerFactory.getLogger(SpecJavadoc.class);
 
     private final MavenProject project;
-    private final Path baseDir;
+    private final List<Path> sourceRoots;
     private final Path javadocDir;
 
     /**
      * @param project the project being built
-     * @param baseDir the project base directory
+     * @param sourceRoots the source roots to document, see {@link #sourceRoots}
      * @param javadocDir the directory to write the javadoc into
      */
-    SpecJavadoc(MavenProject project, Path baseDir, Path javadocDir) {
+    SpecJavadoc(MavenProject project, List<Path> sourceRoots, Path javadocDir) {
         this.project = project;
-        this.baseDir = baseDir;
+        this.sourceRoots = sourceRoots;
         this.javadocDir = javadocDir;
+    }
+
+    /**
+     * The source roots to document: the configured API source roots that
+     * exist, such as the sources of the API module next to a specification
+     * module, or else the compile source roots of the project.
+     *
+     * @param project the project being built
+     * @param baseDir the project base directory
+     * @param apiSourceRoots the configured API source roots, may be null
+     * @return the source roots
+     */
+    static List<Path> sourceRoots(MavenProject project, Path baseDir, List<File> apiSourceRoots) {
+        if (apiSourceRoots != null) {
+            List<Path> roots = apiSourceRoots.stream()
+                    .map(f -> baseDir.resolve(f.toPath()).normalize())
+                    .filter(Files::isDirectory)
+                    .toList();
+            if (!roots.isEmpty()) {
+                return roots;
+            }
+        }
+        return project.getCompileSourceRoots().stream().map(baseDir::resolve).toList();
     }
 
     /**
@@ -82,8 +107,7 @@ final class SpecJavadoc {
      */
     void generate(TransformerFactory transformerFactory) throws MojoExecutionException {
         // Find the sources to document
-        List<Path> sources = project.getCompileSourceRoots().stream()
-                .map(baseDir::resolve)
+        List<Path> sources = sourceRoots.stream()
                 .flatMap(SpecJavadoc::findSources)
                 .toList();
 
@@ -94,11 +118,16 @@ final class SpecJavadoc {
         }
 
         // The ddf pass is written last, so it marks a complete earlier run
+        // over the sources listed next to it
         Path marker = javadocDir.resolve("ddf.txt");
-        if (isUpToDate(marker, sources)) {
+        Path list = javadocDir.resolve("sources.txt");
+        String listed = sources.stream().map(Path::toString).sorted().collect(Collectors.joining("\n"));
+        if (isUpToDate(marker, sources) && isListed(list, listed)) {
             LOG.info("JavaDoc docbook in {} is up to date", javadocDir);
             return;
         }
+        // the packages of other sources documented before must not remain
+        clean();
 
         // Use the JDK documentation tools to build the raw javadoc with our custom doclet
         DocumentationTool documentationTool = ToolProvider.getSystemDocumentationTool();
@@ -175,7 +204,33 @@ final class SpecJavadoc {
             LOG.error("Failed to generate docbook flavoured JavaDoc", e);
             throw new MojoExecutionException("Failed to make JavaDoc docbook files", e);
         }
+        try {
+            Files.writeString(list, listed, UTF_8);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to write " + list, e);
+        }
         LOG.info("JavaDoc generation and transformation complete");
+    }
+
+    private void clean() throws MojoExecutionException {
+        if (!Files.isDirectory(javadocDir)) {
+            return;
+        }
+        try (Stream<Path> files = Files.list(javadocDir)) {
+            for (Path p : files.filter(Files::isRegularFile).toList()) {
+                Files.delete(p);
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to clean " + javadocDir, e);
+        }
+    }
+
+    private static boolean isListed(Path list, String sources) throws MojoExecutionException {
+        try {
+            return Files.isRegularFile(list) && Files.readString(list, UTF_8).equals(sources);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to read " + list, e);
+        }
     }
 
     private static boolean isUpToDate(Path marker, List<Path> sources) throws MojoExecutionException {

@@ -62,7 +62,7 @@ final class SpecBook {
 
     private static final Logger LOG = LoggerFactory.getLogger(SpecBook.class);
 
-    private static final Pattern LEGACY_JAVADOC = Pattern.compile(".*generated/javadoc/docbook/(.+)");
+    static final Pattern LEGACY_JAVADOC = Pattern.compile(".*generated/javadoc/docbook/(.+)");
 
     /**
      * Legacy include path for schema listings, e.g.
@@ -75,7 +75,7 @@ final class SpecBook {
      * root, so the mapped path is searched upwards from the spec file's
      * directory.
      */
-    private static final Pattern LEGACY_RESOURCE = Pattern
+    static final Pattern LEGACY_RESOURCE = Pattern
             .compile(".*generated/((?:xmlns|json\\.schema|residentialdmt)/.+)");
 
     /** Everything before the schema element of an XSD: prolog and licence comment */
@@ -85,7 +85,7 @@ final class SpecBook {
      * The text of a schema listing: an XSD without what precedes its schema
      * element, as the monorepo build listed it.
      */
-    private static String schemaListing(Path p) throws IOException {
+    static String schemaListing(Path p) throws IOException {
         String text = Files.readString(p);
         return p.getFileName().toString().endsWith(".xsd") ? SCHEMA_PROLOG.matcher(text).replaceFirst("$1") : text;
     }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- repo-xsd-licence-marker -->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.osgi.org/xmlns/repo/v1.0.0">
+    <!-- repo-xsd-marker -->
+    <element name="repo" type="string"/>
+</schema>
