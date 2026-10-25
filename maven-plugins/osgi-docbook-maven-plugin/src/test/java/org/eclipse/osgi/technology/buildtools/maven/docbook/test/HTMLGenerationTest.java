@@ -12,6 +12,7 @@ package org.eclipse.osgi.technology.buildtools.maven.docbook.test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -71,6 +72,8 @@ class HTMLGenerationTest {
         // to their sources at the repository root
         assertTrue(chapter.contains("legacy-xmlns-marker"), "xmlns schema listing missing");
         assertTrue(chapter.contains("legacy-json-marker"), "json schema listing missing");
+        // an XSD is listed from its schema element on, without the licence
+        assertFalse(chapter.contains("legacy-xmlns-licence-marker"), "xsd prolog listed");
 
         List<Artifact> attached = project.getAttachedArtifacts();
         assertEquals(1, attached.size());
