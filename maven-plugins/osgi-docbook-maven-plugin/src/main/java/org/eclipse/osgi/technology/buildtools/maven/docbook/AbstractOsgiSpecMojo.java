@@ -62,6 +62,10 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
     @Parameter(property = "osgi.docbook.copyright.year")
     String copyrightYear;
 
+    /** The release shown in the HTML page titles, e.g. {@code 8} */
+    @Parameter(property = "osgi.docbook.release.version", defaultValue = "${project.version}")
+    String releaseVersion;
+
     @Inject
     MavenProject project;
 

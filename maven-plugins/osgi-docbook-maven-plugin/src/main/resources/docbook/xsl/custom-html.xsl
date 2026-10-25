@@ -28,6 +28,7 @@ parent::d:tasksummary|parent::d:warning|parent::d:topic">
 <xsl:import href="custom-html-links.xsl"/>
 <!-- Imported last so its chunk writers take precedence over the DocBook ones -->
 <xsl:import href="custom-html-chunker.xsl"/>
+<xsl:include href="custom-html-image-name.xsl"/>
 <xsl:include href="../docbook-xsl/webhelp/xsl/titlepage.templates.xsl"/>
 <xsl:output omit-xml-declaration="yes"/>
 
@@ -212,7 +213,7 @@ example before
 </xsl:template>
 
 <!-- Images are copied flat into images/ (see OsgiSpecHtmlMojo), so only the
-     file name is kept. SVGs are used directly rather than rasterized. -->
+     file name is kept, see custom-html-image-name.xsl. -->
 <xsl:template match="@fileref" >
   <xsl:choose>
     <xsl:when test="contains(., ':')">
@@ -220,7 +221,7 @@ example before
       <xsl:value-of select="."/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:value-of select="tokenize(., '/')[last()]"/>
+      <xsl:call-template name="osgi.image.filename"/>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
