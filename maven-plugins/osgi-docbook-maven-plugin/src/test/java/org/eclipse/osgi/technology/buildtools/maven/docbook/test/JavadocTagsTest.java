@@ -179,7 +179,9 @@ class JavadocTagsTest {
                 new Link("org.osgi.service.tags.other#Remote.remote()", "org.osgi.service.tags.other.Remote.remote()"),
                 new Link("org.osgi.service.tags.other#org.osgi.service.tags.other", "org.osgi.service.tags.other"),
                 new Link("", "OSGi Core Release 8"),
-                new Link("https://docs.osgi.org", "OSGi Specifications")),
+                new Link("https://docs.osgi.org", "OSGi Specifications"),
+                // not on the class path: listed as text
+                new Link("", "org.osgi.service.unknown.Missing.VALUE")),
                 links(xml, "//class[@name='SeeTags']/a"));
 
         String html = out.html();
@@ -210,6 +212,23 @@ class JavadocTagsTest {
         assertEquals(List.of(new Link("org.osgi.service.tags.other#Remote.remote()", "Remote.remote()")),
                 links(xml, sub + "/return//a"));
         assertEquals("The key, never null.", text(xml, sub + "/param[@name='key']"));
+
+        // without a comment of its own, a method inherits the tags as well
+        String plain = "//method[@qn='InheritPlain.lookup(String)']";
+        assertEquals("Look up the value of a Remote key.", text(xml, plain + "/description"));
+        assertEquals("The key, never null.", text(xml, plain + "/param[@name='key']"));
+        for (String part : List.of("return", "throws")) {
+            assertEquals(links(xml, base + "/" + part + "//a"), links(xml, plain + "/" + part + "//a"),
+                    "Inherited " + part);
+        }
+        // a throws tag names an imported exception
+        assertEquals("If reading fails.", text(xml, "//method[@qn='InheritPlain.read()']/throws"));
+        // nothing is inherited from the element of an annotation, as the
+        // monorepo doclet did
+        assertEquals("The value of the marker.", text(xml, "//method[@qn='Marker.value()']/description"));
+        assertEquals("value", text(xml, "//method[@qn='Marker.Literal.value()']/@name"));
+        assertEquals("", text(xml, "//method[@qn='Marker.Literal.value()']/description"));
+        assertEquals("", text(xml, "//method[@qn='Marker.Literal.value()']/return"));
     }
 
     @Test

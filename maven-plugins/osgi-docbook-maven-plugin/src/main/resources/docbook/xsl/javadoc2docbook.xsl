@@ -990,7 +990,8 @@ version="2.0">
       <xsl:apply-templates select="p" mode="html"/>
     </xsl:for-each>
 
-    <xsl:if test="normalize-space(string-join(description, ' '))">
+    <!-- the first description, as XSLT 1.0 evaluated it -->
+    <xsl:if test="normalize-space(description[1])">
       <xsl:apply-templates select="description"/>
     </xsl:if>
 
@@ -1049,8 +1050,11 @@ version="2.0">
       <xsl:with-param name="target" select="." />
     </xsl:call-template>
 
-    <!-- If method is empty, add an empty para to make the section valid -->
-    <xsl:if test="string-length(normalize-space(string-join(*, ''))) = 0">
+    <!-- If method is empty, add an empty para to make the section valid.
+         The test is the one of XSLT 1.0, which the published specifications
+         were made with: normalize-space(*) is the first child only, so many
+         members get the empty para, and with it the space after them. -->
+    <xsl:if test="string-length(normalize-space(*[1])) = 0">
       <xsl:element name="para" namespace="{$ns}"/>
     </xsl:if>
 
@@ -1074,7 +1078,8 @@ version="2.0">
       </xsl:if>
     </xsl:element>
 
-    <xsl:if test="normalize-space(string-join(description, ' '))">
+    <!-- the first description, as XSLT 1.0 evaluated it -->
+    <xsl:if test="normalize-space(description[1])">
       <xsl:apply-templates select="description"/>
     </xsl:if>
 
@@ -1094,8 +1099,11 @@ version="2.0">
       <xsl:with-param name="target" select="." />
     </xsl:call-template>
 
-    <!-- If method is empty, add an empty para to make the section valid -->
-    <xsl:if test="string-length(normalize-space(string-join(*, ''))) = 0">
+    <!-- If method is empty, add an empty para to make the section valid.
+         The test is the one of XSLT 1.0, which the published specifications
+         were made with: normalize-space(*) is the first child only, so many
+         members get the empty para, and with it the space after them. -->
+    <xsl:if test="string-length(normalize-space(*[1])) = 0">
       <xsl:element name="para" namespace="{$ns}"/>
     </xsl:if>
 

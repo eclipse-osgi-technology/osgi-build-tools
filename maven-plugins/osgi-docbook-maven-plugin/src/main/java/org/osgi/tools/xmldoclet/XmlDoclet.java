@@ -267,9 +267,16 @@ public class XmlDoclet implements Doclet {
 		StringBuilder generics = new StringBuilder();
 		printTypeParams(generics, clazz.getTypeParameters(), 0);
 
-		String modifiers = modifiersString(clazz);
 		boolean isClass = clazz.getKind() == ElementKind.CLASS;
 		boolean isInterface = clazz.getKind() == ElementKind.INTERFACE;
+		// as ClassDoc.modifiers() of the old doclet API, which the published
+		// specifications show: an interface is "public interface", without
+		// the implicit abstract
+		String modifiers = isInterface ? clazz.getModifiers().stream()
+				.filter(m -> m != Modifier.ABSTRACT)
+				.map(Modifier::toString)
+				.collect(Collectors.joining(" ", "", " interface")).strip()
+				: modifiersString(clazz);
 
 		pw.println("  <class name='" + name /**/
 				+ "' fqn='" + clazz.getQualifiedName() /**/
@@ -465,7 +472,7 @@ public class XmlDoclet implements Doclet {
 		}
 		if (t.getKind() == TypeKind.DECLARED) {
 			DeclaredType dt = (DeclaredType) t;
-			sb.append(dt.asElement().getSimpleName());
+			sb.append(typeName(dt.asElement()));
 			List<? extends TypeMirror> args = dt.getTypeArguments();
 			if (!args.isEmpty()) {
 				printTypeArgs(sb, args, level + 1);
@@ -590,11 +597,6 @@ public class XmlDoclet implements Doclet {
 
 	// --- Method printing ---
 
-	static Pattern	DDF_SCOPE		= Pattern
-			.compile("@org.osgi.dmt.ddf.Scope\\(org.osgi.dmt.ddf.Scope.SCOPE.(.+)\\)");
-	static Pattern	DDF_NODETYPE	= Pattern
-			.compile("@org.osgi.dmt.ddf.NodeType\\(\"(.+)\"\\)");
-
 	void printMethod(ExecutableElement method, boolean doDDF, AnnotationValue deflt) {
 		TypeMirror returnType = method.getReturnType();
 		String dimension = getDimension(returnType);
@@ -617,7 +619,7 @@ public class XmlDoclet implements Doclet {
 				+ "' package='"
 				+ elementUtils.getPackageOf(method).getQualifiedName()
 				+ "' modifiers='"
-				+ modifiersString(method)
+				+ methodModifiers(method, containingClass)
 				+ "' typeName='"
 				+ printType(elementType(returnType))
 				+ "' qualifiedTypeName='"
@@ -640,17 +642,16 @@ public class XmlDoclet implements Doclet {
 		if (doDDF) {
 			DDFNode child = new DDFNode(null, method.getSimpleName().toString(),
 					method.getReturnType().toString());
+			// the string form of an annotation differs between the javadoc
+			// APIs, so the values are read from the annotations
 			for (AnnotationMirror ad : method.getAnnotationMirrors()) {
-				String pattern = ad.toString();
-				Matcher m = DDF_SCOPE.matcher(pattern);
-				if (m.matches()) {
-					child.scope = m.group(1);
-					continue;
-				}
-				m = DDF_NODETYPE.matcher(pattern);
-				if (m.matches()) {
-					child.mime = m.group(1);
-					continue;
+				String type = ((TypeElement) ad.getAnnotationType().asElement()).getQualifiedName().toString();
+				Object value = ad.getElementValues().values().stream().findFirst()
+						.map(AnnotationValue::getValue).orElse(null);
+				if (type.equals("org.osgi.dmt.ddf.Scope") && value instanceof VariableElement constant) {
+					child.scope = constant.getSimpleName().toString();
+				} else if (type.equals("org.osgi.dmt.ddf.NodeType") && value != null) {
+					child.mime = value.toString();
 				}
 			}
 			child.print(pw, "");
@@ -768,10 +769,11 @@ public class XmlDoclet implements Doclet {
 			pw.println("   </description>");
 		}
 
-		// Block tags
-		if (docTree == null) return;
+		// Block tags; a method without a comment of its own inherits its
+		// param, return and throws tags
+		if (docTree == null && !(element instanceof ExecutableElement)) return;
 
-		List<? extends DocTree> blockTags = docTree.getBlockTags();
+		List<? extends DocTree> blockTags = docTree != null ? docTree.getBlockTags() : List.of();
 
 		if (!(element instanceof ExecutableElement)) {
 			// For non-methods, just print all tags
@@ -859,7 +861,7 @@ public class XmlDoclet implements Doclet {
 		thrown: for (TypeMirror thrown : method.getThrownTypes()) {
 			String thrownName = thrown.toString();
 			for (ThrowsTree tag : throwsTags) {
-				String tagName = throwsTypeName(tag);
+				String tagName = throwsTypeName(tag, own);
 				if (thrownName.equals(tagName)) {
 					continue thrown;
 				}
@@ -1014,7 +1016,13 @@ public class XmlDoclet implements Doclet {
 		if (reference.isEmpty()) return;
 		DocTree first = reference.get(0);
 		if (first instanceof ReferenceTree ref) {
+			int start = sb.length();
 			appendLink(sb, holder, ref, reference.subList(1, reference.size()));
+			if (!sb.substring(start).startsWith("<a ")) {
+				// no target in this javadoc, e.g. a class of another
+				// specification: listed as text, as the monorepo doclet did
+				sb.insert(start, "<a>").append("</a>");
+			}
 		} else if (first.getKind() == DocTree.Kind.TEXT) {
 			// A quoted string, such as a book title
 			String text = docTreeListToString(reference, holder);
@@ -1118,13 +1126,15 @@ public class XmlDoclet implements Doclet {
 			case TEXT:
 				sb.append(((TextTree) tree).getBody());
 				break;
+			// without the trailing white space of a tag that ends on the next
+			// line, e.g. {@code BundlePermission\n * }, as the old doclet API
 			case CODE:
 				sb.append("<code>");
-				sb.append(escape(((LiteralTree) tree).getBody().getBody()));
+				sb.append(escape(((LiteralTree) tree).getBody().getBody().stripTrailing()));
 				sb.append("</code>");
 				break;
 			case LITERAL:
-				sb.append(escape(((LiteralTree) tree).getBody().getBody()));
+				sb.append(escape(((LiteralTree) tree).getBody().getBody().stripTrailing()));
 				break;
 			case LINK:
 			case LINK_PLAIN: {
@@ -1198,10 +1208,13 @@ public class XmlDoclet implements Doclet {
 	}
 
 	void collectOverrides(ExecutableElement method, TypeElement clazz, List<ExecutableElement> results) {
-		// Check interfaces
+		// Check interfaces; the elements of an annotation, such as value()
+		// of an annotation literal, were no methods to inherit from for the
+		// monorepo doclet, and their documentation is printed with the
+		// annotation already
 		for (TypeMirror iface : clazz.getInterfaces()) {
 			Element ifaceElem = typeUtils.asElement(iface);
-			if (ifaceElem instanceof TypeElement te) {
+			if (ifaceElem instanceof TypeElement te && te.getKind() != ElementKind.ANNOTATION_TYPE) {
 				for (Element m : te.getEnclosedElements()) {
 					if (m instanceof ExecutableElement ee
 							&& elementUtils.overrides(method, ee, (TypeElement) method.getEnclosingElement())) {
@@ -1254,7 +1267,7 @@ public class XmlDoclet implements Doclet {
 			if (inherited.doc() != null) {
 				for (DocTree tag : inherited.doc().getBlockTags()) {
 					if (tag instanceof ThrowsTree tt) {
-						String name = throwsTypeName(tt);
+						String name = throwsTypeName(tt, inherited);
 						if (throwsName.equals(name)) {
 							owners.put(tt, inherited);
 							return tt;
@@ -1285,7 +1298,15 @@ public class XmlDoclet implements Doclet {
 	static final String		JAVAIDENTIFIER	= "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
 	static final Pattern	FQCN			= Pattern.compile(JAVAIDENTIFIER + "(\\." + JAVAIDENTIFIER + ")*");
 
-	String throwsTypeName(ThrowsTree tag) {
+	/**
+	 * The qualified name of the exception of a throws tag, resolved in the
+	 * scope of the comment that has the tag, so that IOException is
+	 * java.io.IOException where it is imported.
+	 */
+	String throwsTypeName(ThrowsTree tag, Holder holder) {
+		if (resolve(holder, tag.getExceptionName()) instanceof TypeElement type) {
+			return type.getQualifiedName().toString();
+		}
 		String name = tag.getExceptionName().toString();
 		Matcher m = FQCN.matcher(name);
 		if (m.find()) {
@@ -1313,6 +1334,22 @@ public class XmlDoclet implements Doclet {
 			return name.substring(0, n) + "." + name.substring(n + 1);
 		else
 			return name;
+	}
+
+	/**
+	 * As MethodDoc.modifiers() of the old doclet API, which the published
+	 * specifications show: the implicit abstract of an interface method is
+	 * not written.
+	 */
+	String methodModifiers(ExecutableElement method, TypeElement containingClass) {
+		if (!containingClass.getKind().isInterface()) {
+			return modifiersString(method);
+		}
+		// nor the default of a default method
+		return method.getModifiers().stream()
+				.filter(m -> m != Modifier.ABSTRACT && m != Modifier.DEFAULT)
+				.map(Modifier::toString)
+				.collect(Collectors.joining(" "));
 	}
 
 	String modifiersString(Element element) {
@@ -1366,6 +1403,20 @@ public class XmlDoclet implements Doclet {
 			return qualifiedTypeName(((ArrayType) type).getComponentType()) + "[]";
 		}
 		return type.toString();
+	}
+
+	/**
+	 * As Type.typeName() of the old doclet API, which the published
+	 * specifications show: a nested type with its enclosing types, e.g.
+	 * Export.Substitution.
+	 */
+	static String typeName(Element type) {
+		StringBuilder sb = new StringBuilder(type.getSimpleName());
+		for (Element e = type.getEnclosingElement(); e != null
+				&& (e.getKind().isClass() || e.getKind().isInterface()); e = e.getEnclosingElement()) {
+			sb.insert(0, '.').insert(0, e.getSimpleName());
+		}
+		return sb.toString();
 	}
 
 	String simpleTypeName(TypeMirror type) {
