@@ -21,15 +21,26 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystemAlreadyExistsException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Map;
+import java.util.stream.Stream;
 
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -37,6 +48,7 @@ import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopConfParser;
 import org.apache.fop.apps.FopFactory;
@@ -47,6 +59,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.xmlgraphics.io.Resource;
 import org.apache.xmlgraphics.io.ResourceResolver;
+import org.osgi.tools.fop.FOPMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +110,9 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
             transformerFactory.setFeature(FeatureKeys.XINCLUDE, true);
             Transformer transformer = transformerFactory.newTransformer(resolver.stylesheet());
             transformer.setParameter("draft.mode", draftMode);
+            // custom-fo.xsl asks for indentation, which Saxon also applies to
+            // mixed content: it puts spaces around links and inline elements
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
 
             LOG.debug("Loaded OSGi specification docbook to FO transformer");
 
@@ -116,7 +132,14 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
         throws MojoExecutionException {
         FopFactory fopFactory;
         try {
-            try(InputStream is = getClass().getResourceAsStream("/fop/fop-osgi.xconf")) {
+            // FOP finds the fonts by their family names in this directory, and
+            // the SVG images use them through Java's font registry
+            Path fontDir = extractFonts(buildDir.resolve("fonts"));
+            FOPMain.registerFonts(fontDir.toString());
+            try(InputStream conf = getClass().getResourceAsStream("/fop/fop-osgi.xconf")) {
+                String xconf = new String(conf.readAllBytes(), StandardCharsets.UTF_8)
+                        .replace("@font.base.dir@", fontDir.toString());
+                InputStream is = new ByteArrayInputStream(xconf.getBytes(StandardCharsets.UTF_8));
                 FopConfParser parser = new FopConfParser(is, buildDir.toUri(), pdfResourceResolver(buildDir));
                 parser.getFopFactoryBuilder().getImageManager();
                 fopFactory = parser.getFopFactoryBuilder().build();
@@ -126,7 +149,10 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
             Path outputPath = buildDir.resolve(outputFileBaseName + ".pdf");
             try (OutputStream pdfOutput = new BufferedOutputStream(
                     Files.newOutputStream(outputPath, CREATE, TRUNCATE_EXISTING))) {
-                Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, pdfOutput);
+                FOUserAgent userAgent = fopFactory.newFOUserAgent();
+                // the books are English, hyphenated as FOP 1.1 did
+                WordHyphenation.install(userAgent, "en");
+                Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, userAgent, pdfOutput);
                 Transformer transformer = transformerFactory.newTransformer();
 
                 Source xmlSource = new StreamSource(foFile.toFile());
@@ -137,6 +163,44 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
         } catch (Exception e) {
             LOG.error("Failed to create the PDF", e);
             throw new MojoExecutionException("Failed to create PDF", e);
+        }
+    }
+
+    /**
+     * Copies the bundled fonts into a directory
+     *
+     * @param fontDir the directory
+     * @return the directory
+     */
+    static Path extractFonts(Path fontDir) throws IOException, URISyntaxException {
+        URL url = OsgiSpecPdfMojo.class.getResource("/fonts/ARIALUNI.ttf");
+        if (url == null) {
+            throw new IOException("No bundled fonts");
+        }
+        URI uri = url.toURI();
+        Files.createDirectories(fontDir);
+        if ("jar".equals(uri.getScheme())) {
+            FileSystem fs;
+            try {
+                fs = FileSystems.newFileSystem(uri, Map.of());
+            } catch (FileSystemAlreadyExistsException e) {
+                fs = FileSystems.getFileSystem(uri);
+            }
+            copyFonts(fs.getPath("/fonts"), fontDir);
+        } else {
+            copyFonts(Path.of(uri).getParent(), fontDir);
+        }
+        return fontDir;
+    }
+
+    private static void copyFonts(Path from, Path to) throws IOException {
+        try (Stream<Path> fonts = Files.list(from)) {
+            for (Path f : fonts.toList()) {
+                Path target = to.resolve(f.getFileName().toString());
+                if (!Files.exists(target)) {
+                    Files.copy(f, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
         }
     }
 

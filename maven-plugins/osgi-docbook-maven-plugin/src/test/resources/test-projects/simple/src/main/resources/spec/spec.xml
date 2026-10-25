@@ -48,6 +48,10 @@
     from driver specific classes. Additionally, this mechanism helps to use
     common OSGi practices and to avoid class loading problems.</para>
 
+    <!-- Not part of the JDBC specification: the ohm sign and the omega,
+    which the OSGi fonts do not draw, see PDFGenerationTest. -->
+    <para>A resistance in &#x2126;, an angle &#x3A9;.</para>
+
     <!-- Not part of the JDBC specification. This paragraph was added to test
     references to targets outside the book, see HTMLGenerationTest: a chapter
     and a javadoc member that are in the bundled link index, and an id that is

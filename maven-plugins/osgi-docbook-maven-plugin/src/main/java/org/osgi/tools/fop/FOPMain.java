@@ -77,7 +77,7 @@ public class FOPMain {
 	 * 
 	 * @param fontDirName The name of a directory containing fonts.
 	 */
-	private static void registerFonts(String fontDirName) {
+	public static void registerFonts(String fontDirName) {
 		if (fontDirName.length() == 0) {
 			return;
 		}
