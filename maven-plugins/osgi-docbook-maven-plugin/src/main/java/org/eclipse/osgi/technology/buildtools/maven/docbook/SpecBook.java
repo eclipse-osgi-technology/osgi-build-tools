@@ -25,9 +25,11 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -43,6 +45,8 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -50,9 +54,10 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.ext.EntityResolver2;
 
 /**
- * The virtual book that wraps the specification chapter, and the XInclude
- * resolution that pulls in the chapter, the bundled front matter and the
- * generated javadoc.
+ * The book to render: either the virtual book that wraps a single
+ * specification chapter, with the XInclude resolution that pulls in the
+ * chapter, the bundled front matter and the generated javadoc, or a complete
+ * book file whose includes are plain relative paths.
  */
 final class SpecBook {
 
@@ -93,11 +98,25 @@ final class SpecBook {
     private final Path specFile;
     private final Path specDir;
     private final String bookXML;
+    /** A complete book file, or null for the virtual book */
+    private final Path bookFile;
 
-    private SpecBook(Path specFile, Path specDir, String bookXML) {
+    private SpecBook(Path specFile, Path specDir, String bookXML, Path bookFile) {
         this.specFile = specFile;
         this.specDir = specDir;
         this.bookXML = bookXML;
+        this.bookFile = bookFile;
+    }
+
+    /**
+     * A complete book: its includes are resolved relative to the book file,
+     * as for any DocBook document.
+     *
+     * @param bookFile the book file
+     * @return the book
+     */
+    static SpecBook book(Path bookFile) {
+        return new SpecBook(null, null, null, bookFile);
     }
 
     /**
@@ -112,23 +131,42 @@ final class SpecBook {
      */
     static SpecBook setup(Path specFile, Path specDir, String title, String version,
             TransformerFactory transformerFactory) throws MojoExecutionException {
+        String bookXML = wrapper(title, version, List.of(), transformerFactory);
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("Book XML is:\n\n{}", bookXML);
+        }
+        LOG.info("Virtual book generation and transformation complete");
+        return new SpecBook(specFile, specDir, bookXML, null);
+    }
+
+    /**
+     * The book that wraps specification chapters: the bundled front matter,
+     * {@code preface/} and {@code 001/introduction.xml}, and the chapters.
+     *
+     * @param title the book title
+     * @param version the book version
+     * @param chapters the paths of the chapters to include, or none for the
+     *            single chapter {@code spec.xml}
+     * @param transformerFactory
+     * @return the book XML
+     * @throws MojoExecutionException
+     */
+    static String wrapper(String title, String version, List<String> chapters,
+            TransformerFactory transformerFactory) throws MojoExecutionException {
         StringWriter sw = new StringWriter();
         try (InputStream xslt = SpecBook.class.getResourceAsStream("/docbook/book/book-setup.xsl")){
             Transformer transformer = transformerFactory.newTransformer(new StreamSource(xslt));
             transformer.setParameter("title", title);
             transformer.setParameter("version", version);
+            transformer.setParameter("chapters", String.join(" ", chapters));
             try (InputStream input = SpecBook.class.getResourceAsStream("/docbook/book/book.xml")) {
                 transformer.transform(new StreamSource(input), new StreamResult(sw));
-            }
-            if(LOG.isDebugEnabled()) {
-                LOG.debug("Book XML is:\n\n{}", sw.toString());
             }
         } catch (IOException | TransformerException e) {
             LOG.error("Failed to make virtual book", e);
             throw new MojoExecutionException("Failed to setup virtual specification book", e);
         }
-        LOG.info("Virtual book generation and transformation complete");
-        return new SpecBook(specFile, specDir, sw.toString());
+        return sw.toString();
     }
 
     /**
@@ -148,6 +186,10 @@ final class SpecBook {
 
             SAXParser parser = parserFactory.newSAXParser();
             XMLReader xmlReader = parser.getXMLReader();
+            if (bookFile != null) {
+                xmlReader.setEntityResolver(bookResolver(stylesheetResolver));
+                return new SAXSource(xmlReader, new InputSource(bookFile.toUri().toASCIIString()));
+            }
             xmlReader.setEntityResolver(resolver(stylesheetResolver));
 
             SAXSource bookSource = new SAXSource(xmlReader, new InputSource(new StringReader(bookXML)));
@@ -157,6 +199,14 @@ final class SpecBook {
             LOG.error("Failed to create the book parser", e);
             throw new MojoExecutionException("Failed to create the book parser", e);
         }
+    }
+
+    /**
+     * @return the directory of a complete book, which relative image paths
+     *         are resolved against, or null for the virtual book
+     */
+    Path bookDir() {
+        return bookFile != null ? bookFile.getParent() : null;
     }
 
     /**
@@ -184,12 +234,62 @@ final class SpecBook {
             SAXSource source = source(resolver);
             DOMResult result = new DOMResult();
             transformer.transform(source, result);
+            String systemId = bookFile != null ? bookFile.toUri().toASCIIString() : INTERNAL_BOOK;
+            if (bookFile != null) {
+                // XInclude leaves xml:base relative to the including file;
+                // make them absolute, so that the stylesheets resolve images
+                // to absolute URIs
+                Element root = ((Document) result.getNode()).getDocumentElement();
+                absoluteBase(root, URI.create(systemId));
+            }
             LOG.info("Book profiled with draft.mode {}", draftMode);
-            return new DOMSource(result.getNode(), INTERNAL_BOOK);
+            return new DOMSource(result.getNode(), systemId);
         } catch (TransformerException e) {
             LOG.error("Failed to profile the book", e);
             throw new MojoExecutionException("Failed to profile the specification book", e);
         }
+    }
+
+    private static void absoluteBase(Element element, URI base) {
+        String attr = element.getAttributeNS(XMLConstants.XML_NS_URI, "base");
+        if (!attr.isEmpty()) {
+            base = base.resolve(attr);
+            element.setAttributeNS(XMLConstants.XML_NS_URI, "xml:base", base.toString());
+        }
+        for (org.w3c.dom.Node n = element.getFirstChild(); n != null; n = n.getNextSibling()) {
+            if (n instanceof Element child) {
+                absoluteBase(child, base);
+            }
+        }
+    }
+
+    private EntityResolver bookResolver(ClasspathStylesheetResolver stylesheetResolver) {
+        return new EntityResolver2() {
+
+            @Override
+            public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
+                return null;
+            }
+
+            @Override
+            public InputSource resolveEntity(String name, String publicId, String baseURI, String systemId)
+                    throws SAXException, IOException {
+                if (stylesheetResolver.internalId().equals(baseURI)) {
+                    try {
+                        return SAXSource.sourceToInputSource(stylesheetResolver.resolve(systemId, baseURI));
+                    } catch (TransformerException e) {
+                        throw new SAXException("Failed to resolve " + systemId, e);
+                    }
+                }
+                // everything else relative to the including file
+                return null;
+            }
+
+            @Override
+            public InputSource getExternalSubset(String name, String baseURI) throws SAXException, IOException {
+                return null;
+            }
+        };
     }
 
     private EntityResolver resolver(ClasspathStylesheetResolver stylesheetResolver) {

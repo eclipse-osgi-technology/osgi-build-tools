@@ -3,6 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:db="http://docbook.org/ns/docbook"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
     xmlns="http://docbook.org/ns/docbook"
     exclude-result-prefixes="db xs">
 
@@ -11,11 +12,20 @@
     <xsl:param name="title" select="'No title provided'" />
     <xsl:param name="version" select="'No version provided'" />
     <xsl:param name="publishDate" select="string(current-date())" />
+    <!-- the paths of the chapters, separated by spaces; empty for the single
+         chapter spec.xml -->
+    <xsl:param name="chapters" select="''" />
 
     <xsl:template match="@*|node()">
         <xsl:copy>
             <xsl:apply-templates select="@*|node()"/>
         </xsl:copy>
+    </xsl:template>
+
+    <xsl:template match="xi:include[@href = 'spec.xml'][normalize-space($chapters)]">
+        <xsl:for-each select="tokenize(normalize-space($chapters), ' ')">
+            <xi:include href="{.}"/>
+        </xsl:for-each>
     </xsl:template>
 
     <xsl:template match="db:info/db:title">
