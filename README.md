@@ -154,6 +154,7 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.html.rasterizeImages` | `false` | Convert SVG images into PNG images (scale 2, 300 dpi), as the published books do |
 | `osgi.docbook.draft` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
 | `osgi.docbook.release.version` | `${project.version}` | The release shown in the HTML page titles, e.g. `8` |
+| `osgi.docbook.book.source` | none | A complete book instead of a single chapter, see below |
 | `osgi.docbook.docbook.skip` | `false` | Skip the `docbook` goal |
 
 For example:
@@ -216,8 +217,37 @@ all chapters of the project in one book, in the order of their labels. A
 chapter that includes the javadoc of another project, such as the Framework
 API chapter, gets it from the sources of that project: `includedSourceRoots`
 (e.g. the unpacked `-sources` of the API) are documented with the API for the
-rendering, but not packed. The build fails with the missing files listed
+rendering, but not packed; a book gets that javadoc from the DocBook archive
+of the other project. The build fails with the missing files listed
 otherwise. A project without a chapter renders nothing.
+
+### A complete book
+
+With `bookSource`, the `pdf` and `html` goals render a complete book instead
+of a single chapter. The directory of the book file holds what belongs to the
+book itself (front matter, introduction, chapter order); the chapters come
+from the DocBook archives listed as `docbooks`, `groupId:artifactId:version`.
+Each is resolved from the Maven repositories (type `zip`, classifier
+`docbook`), and one that is not there is taken from `docbookFallback`
+(default `src/main/docbook`), as the unpacked archive
+`<artifactId>/<version>/`: the DocBook of a release that was never deployed
+can be checked in with the book.
+
+```xml
+<configuration>
+	<bookSource>${project.basedir}/src/main/book/book.xml</bookSource>
+	<docbooks>
+		<docbook>org.osgi.spec:org.osgi.service.cm:${org.osgi.service.cm.version}</docbook>
+	</docbooks>
+</configuration>
+```
+
+The archives and the book are staged into one directory, so the book includes
+its chapters with plain relative paths, e.g.
+`<xi:include href="chapters/service.cm/service.cm.xml"/>`, and a chapter
+finds the javadoc of any package of the book. The book is rendered as the
+monorepo build did: profiled (`osgi.docbook.draft`), with its own title page
+and release information, and without the javadoc step.
 
 ## Development
 
