@@ -32,6 +32,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -98,6 +100,19 @@ final class SpecJavadoc {
             }
         }
         return project.getCompileSourceRoots().stream().map(baseDir::resolve).toList();
+    }
+
+    /**
+     * @param sourceRoots source roots
+     * @return the packages with sources in the source roots
+     */
+    static Set<String> packages(List<Path> sourceRoots) {
+        Set<String> packages = new TreeSet<>();
+        for (Path root : sourceRoots) {
+            findSources(root).map(p -> root.relativize(p.getParent()).toString().replace(File.separatorChar, '.'))
+                    .forEach(packages::add);
+        }
+        return packages;
     }
 
     /**

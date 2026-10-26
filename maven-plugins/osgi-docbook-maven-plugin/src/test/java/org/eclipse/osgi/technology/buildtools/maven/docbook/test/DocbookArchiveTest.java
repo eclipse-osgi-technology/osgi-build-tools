@@ -19,12 +19,14 @@ package org.eclipse.osgi.technology.buildtools.maven.docbook.test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -43,11 +45,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.testing.ArtifactStubFactory;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.osgi.technology.buildtools.maven.docbook.OsgiSpecDocbookMojo;
+import org.eclipse.osgi.technology.buildtools.maven.docbook.OsgiSpecHtmlMojo;
+import org.eclipse.osgi.technology.buildtools.maven.docbook.OsgiSpecPdfMojo;
 import org.junit.jupiter.api.Test;
 
 /**
  * The specification module of a repository: the docbook goal packs its
- * chapters and the DocBook of its API.
+ * chapters and the DocBook of its API, the pdf and html goals render that
+ * archive with the javadoc of other projects from their sources.
  */
 @MojoTest
 class DocbookArchiveTest {
@@ -100,11 +105,78 @@ class DocbookArchiveTest {
     }
 
     @Test
-    @Basedir("/test-projects/javadoc-only/spec")
-    public void testJavadocOnly(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook) throws Exception {
+    @Basedir("/test-projects/repo/spec")
+    public void testPdf(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook,
+            @InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
         MavenProject project = project(docbook);
+        included(docbook);
+        MojoExtension.setVariableValueToObject(pdf, "project", project);
+        MojoExtension.setVariableValueToObject(pdf, "specTitle", project.getName());
+        docbook.execute();
+        pdf.execute();
+
+        List<Artifact> attached = project.getAttachedArtifacts();
+        assertEquals(List.of("zip", "fo", "pdf"), attached.stream().map(Artifact::getType).toList());
+        assertTrue(Files.readString(attached(project, "specification", "pdf").getFile().toPath(), java.nio.charset.StandardCharsets.ISO_8859_1)
+                .startsWith("%PDF-"), "Not a PDF");
+
+        assertFalse(entries(attached(project, "docbook").getFile()).contains("javadoc/org.osgi.service.foreign.xml"),
+                "the javadoc of the included sources is packed");
+        String fo = Files.readString(attached(project, "specification", "fo").getFile().toPath(), UTF_8);
+        for (String marker : List.of("chapter-one-marker", "chapter-two-marker", "part-marker", "repo-xsd-marker",
+                "repo-javadoc-marker", "A type of another project, foreign-javadoc-marker",
+                "Repository Test Specification")) {
+            assertTrue(fo.contains(marker), "Missing " + marker);
+        }
+        assertFalse(fo.contains("repo-xsd-licence-marker"), "xsd prolog listed");
+        // in the order of the labels: chapter two has label 1
+        assertTrue(fo.indexOf("chapter-two-marker") < fo.indexOf("chapter-one-marker"), "chapters not ordered");
+    }
+
+    @Test
+    @Basedir("/test-projects/repo/spec")
+    public void testHtml(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook,
+            @InjectMojo(goal = "html") OsgiSpecHtmlMojo html) throws Exception {
+        MavenProject project = project(docbook);
+        included(docbook);
+        MojoExtension.setVariableValueToObject(html, "project", project);
+        docbook.execute();
+        html.execute();
+
+        Path dir = Path.of(project.getBuild().getDirectory(), "spec", "html");
+        for (String file : List.of("index.html", "repo.one.html", "repo.xml.html", "images/one-classes.svg")) {
+            assertTrue(Files.isRegularFile(dir.resolve(file)), "Missing " + file);
+        }
+        assertTrue(Files.readString(dir.resolve("repo.xml.html"), UTF_8).contains("foreign-javadoc-marker"));
+        assertTrue(Files.readString(dir.resolve("repo.one.html"), UTF_8).contains("repo-javadoc-marker"));
+        assertEquals("specification-html", attached(project, "specification-html").getClassifier());
+    }
+
+    @Test
+    @Basedir("/test-projects/repo/spec")
+    public void testMissingJavadoc(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook,
+            @InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
+        MavenProject project = project(docbook);
+        MojoExtension.setVariableValueToObject(pdf, "project", project);
         docbook.execute();
 
+        MojoExecutionException e = assertThrows(MojoExecutionException.class, pdf::execute);
+        assertTrue(e.getMessage().contains(
+                "chapters/repo.xml/repo.xml.xml includes ../../javadoc/org.osgi.service.foreign.xml"), e.getMessage());
+        assertEquals(List.of("zip"), project.getAttachedArtifacts().stream().map(Artifact::getType).toList());
+    }
+
+    @Test
+    @Basedir("/test-projects/javadoc-only/spec")
+    public void testJavadocOnly(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook,
+            @InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
+        MavenProject project = project(docbook);
+        MojoExtension.setVariableValueToObject(pdf, "project", project);
+        docbook.execute();
+        pdf.execute();
+
+        assertEquals(List.of("zip"), project.getAttachedArtifacts().stream().map(Artifact::getType).toList(),
+                "no chapter, no PDF");
         Artifact zip = attached(project, "docbook");
         assertEquals(new TreeSet<>(List.of("META-INF/docbook.properties", "javadoc/org.osgi.service.foreign.xml")),
                 entries(zip.getFile()));
@@ -130,9 +202,24 @@ class DocbookArchiveTest {
         return project;
     }
 
+    /**
+     * The javadoc of org.osgi.service.foreign from the sources of the other
+     * project
+     */
+    private static void included(OsgiSpecDocbookMojo docbook) throws Exception {
+        MojoExtension.setVariableValueToObject(docbook, "includedSourceRoots",
+                List.of(new File("../../javadoc-only/api/src/main/java")));
+    }
+
     private static Artifact attached(MavenProject project, String classifier) {
         return project.getAttachedArtifacts().stream().filter(a -> classifier.equals(a.getClassifier()))
                 .findFirst().orElseThrow(() -> new AssertionError("No attached " + classifier));
+    }
+
+    private static Artifact attached(MavenProject project, String classifier, String type) {
+        return project.getAttachedArtifacts().stream()
+                .filter(a -> classifier.equals(a.getClassifier()) && type.equals(a.getType())).findFirst()
+                .orElseThrow(() -> new AssertionError("No attached " + classifier + " " + type));
     }
 
     private static Set<String> entries(File zip) throws Exception {

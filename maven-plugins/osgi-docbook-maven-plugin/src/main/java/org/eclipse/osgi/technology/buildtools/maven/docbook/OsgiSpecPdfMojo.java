@@ -85,7 +85,7 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
         Path foFile = createFOFile(book, buildDir);
         LOG.info("Specification FO generation and transformation complete");
 
-        Path pdf = generatePDF(foFile, buildDir, newTransformerFactory());
+        Path pdf = generatePDF(foFile, buildDir, book.bookDir(), newTransformerFactory());
         LOG.info("Specification PDF generation and transformation complete");
 
         // We attach the FO as it can be used to make a diff in the future
@@ -128,7 +128,7 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
         }
     }
 
-    private Path generatePDF(Path foFile, Path buildDir, TransformerFactory transformerFactory)
+    private Path generatePDF(Path foFile, Path buildDir, Path bookDir, TransformerFactory transformerFactory)
         throws MojoExecutionException {
         FopFactory fopFactory;
         try {
@@ -140,7 +140,7 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
                 String xconf = new String(conf.readAllBytes(), StandardCharsets.UTF_8)
                         .replace("@font.base.dir@", fontDir.toString());
                 InputStream is = new ByteArrayInputStream(xconf.getBytes(StandardCharsets.UTF_8));
-                FopConfParser parser = new FopConfParser(is, buildDir.toUri(), pdfResourceResolver(buildDir));
+                FopConfParser parser = new FopConfParser(is, buildDir.toUri(), pdfResourceResolver(buildDir, bookDir));
                 parser.getFopFactoryBuilder().getImageManager();
                 fopFactory = parser.getFopFactoryBuilder().build();
             }
@@ -204,7 +204,7 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
         }
     }
 
-    private ResourceResolver pdfResourceResolver(Path buildDir) {
+    private ResourceResolver pdfResourceResolver(Path buildDir, Path bookDir) {
         return new ResourceResolver() {
             @Override
             public Resource getResource(URI uri) throws IOException {
@@ -219,6 +219,10 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
                     if(relative.startsWith("@font.base.url@/")) {
                         LOG.debug("URI is a font URI, searching local fonts");
                         is = getClass().getResourceAsStream("/fonts" + relative.substring(15));
+                    } else if(bookDir != null && relative.startsWith("@book.base.url@/")
+                            && Files.isRegularFile(bookDir.resolve(relative.substring(16)))) {
+                        LOG.debug("URI is relative to the book, e.g. an image of a chapter");
+                        is = Files.newInputStream(bookDir.resolve(relative.substring(16)));
                     } else if(relative.startsWith("@book.base.url@/")) {
                         LOG.debug("URI is a book base URI, searching local book fonts");
                         is = getClass().getResourceAsStream("/fop/hyph" + relative.substring(15));

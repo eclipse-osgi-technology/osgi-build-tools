@@ -41,7 +41,9 @@ import net.sf.saxon.lib.FeatureKeys;
 
 /**
  * The steps shared by every specification output format: parameter checks,
- * javadoc generation and the virtual book set-up.
+ * javadoc generation and the virtual book set-up. When the docbook goal ran
+ * before in the same build, its archive is rendered: all chapters of the
+ * project in one book.
  */
 public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
 
@@ -124,11 +126,22 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to create " + formatDir, e);
         }
 
-        new SpecJavadoc(project, SpecJavadoc.sourceRoots(project, baseDir, apiSourceRoots),
-                specDir.resolve("javadoc")).generate(newTransformerFactory());
+        SpecBook book;
+        if (project.getContextValue(BookStaging.ARCHIVE) instanceof Path archive) {
+            Path staged = new BookStaging(specDir.resolve("book")).stageArchive(archive, specTitle,
+                    project.getVersion(), newTransformerFactory());
+            if (staged == null) {
+                LOG.info("No chapter in the DocBook archive, no specification {}", formatName());
+                return;
+            }
+            book = SpecBook.book(staged);
+        } else {
+            new SpecJavadoc(project, SpecJavadoc.sourceRoots(project, baseDir, apiSourceRoots),
+                    specDir.resolve("javadoc")).generate(newTransformerFactory());
 
-        SpecBook book = SpecBook.setup(baseDir.resolve(chapterSource), specDir, specTitle,
-                project.getVersion(), newTransformerFactory());
+            book = SpecBook.setup(baseDir.resolve(chapterSource), specDir, specTitle,
+                    project.getVersion(), newTransformerFactory());
+        }
 
         generate(book, formatDir);
     }

@@ -210,6 +210,15 @@ specification module with packaging `pom`:
 </configuration>
 ```
 
+When the `pdf` and `html` goals run after the `docbook` goal in the same
+build (bind them to the phase `package`, after it), they render the archive:
+all chapters of the project in one book, in the order of their labels. A
+chapter that includes the javadoc of another project, such as the Framework
+API chapter, gets it from the sources of that project: `includedSourceRoots`
+(e.g. the unpacked `-sources` of the API) are documented with the API for the
+rendering, but not packed. The build fails with the missing files listed
+otherwise. A project without a chapter renders nothing.
+
 ## Development
 
 The source for the plugin is in

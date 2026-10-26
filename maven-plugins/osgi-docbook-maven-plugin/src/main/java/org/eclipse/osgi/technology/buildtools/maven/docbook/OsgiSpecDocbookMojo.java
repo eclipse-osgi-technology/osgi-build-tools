@@ -27,7 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,7 +68,8 @@ import org.slf4j.LoggerFactory;
  * A chapter may include the javadoc of a package of another project, such as
  * the Framework API chapter; that file comes from the DocBook archive of the
  * other project when the book is assembled. The archive is attached with the
- * classifier {@code docbook} and type {@code zip}.
+ * classifier {@code docbook} and type {@code zip}. The pdf and html goals that
+ * run after this goal in the same build render the archive.
  */
 @Mojo(name = "docbook", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class OsgiSpecDocbookMojo extends AbstractMojo {
@@ -99,6 +102,16 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
     @Parameter
     List<File> apiSourceRoots;
 
+    /**
+     * The sources of other projects whose javadoc the chapters include, such
+     * as the unpacked sources of org.osgi.dto for the DTO chapter of the
+     * framework. They are documented with the API, so that the pdf and html
+     * goals render the chapters, but not packed: a book gets that javadoc from
+     * the DocBook archive of the other project.
+     */
+    @Parameter
+    List<File> includedSourceRoots;
+
     /** Skip the DocBook archive */
     @Parameter(property = "osgi.docbook.docbook.skip", defaultValue = "false")
     boolean skip;
@@ -123,10 +136,18 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
         outDir = specDir.resolve("docbook");
         clean(outDir);
 
+        Path includedDir = specDir.resolve(BookStaging.INCLUDED);
+        clean(includedDir);
+
         Path javadocDir = specDir.resolve("javadoc");
-        new SpecJavadoc(project, SpecJavadoc.sourceRoots(project, baseDir, apiSourceRoots), javadocDir)
-                .generate(AbstractOsgiSpecMojo.newTransformerFactory());
-        TreeSet<String> packages = copyJavadoc(javadocDir);
+        List<Path> api = SpecJavadoc.sourceRoots(project, baseDir, apiSourceRoots);
+        List<Path> roots = new ArrayList<>(api);
+        if (includedSourceRoots != null) {
+            includedSourceRoots.stream().map(f -> baseDir.resolve(f.toPath()).normalize())
+                    .filter(Files::isDirectory).forEach(roots::add);
+        }
+        new SpecJavadoc(project, roots, javadocDir).generate(AbstractOsgiSpecMojo.newTransformerFactory());
+        TreeSet<String> packages = copyJavadoc(javadocDir, SpecJavadoc.packages(api), includedDir);
 
         TreeSet<String> ids = new TreeSet<>();
         Path chapter = baseDir.resolve(chapterSource);
@@ -169,11 +190,17 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
         Path zip = buildDir.resolve(baseName + "-" + CLASSIFIER + ".zip");
         zip(outDir, zip);
         helper.attachArtifact(project, "zip", CLASSIFIER, zip.toFile());
+        project.setContextValue(BookStaging.ARCHIVE, outDir);
         LOG.info("DocBook archive {} with chapters {} and {} packages attached", zip.getFileName(), ids,
                 packages.size());
     }
 
-    private TreeSet<String> copyJavadoc(Path javadocDir) throws MojoExecutionException {
+    /**
+     * The javadoc of the packages of the API goes into the archive, the
+     * javadoc of the included sources of other projects next to it.
+     */
+    private TreeSet<String> copyJavadoc(Path javadocDir, Set<String> api, Path includedDir)
+            throws MojoExecutionException {
         TreeSet<String> packages = new TreeSet<>();
         if (!Files.isDirectory(javadocDir)) {
             return packages;
@@ -185,9 +212,14 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
                 if (!name.endsWith(".xml") || name.equals("javadoc.xml")) {
                     continue;
                 }
+                String pkg = name.substring(0, name.length() - 4).replaceFirst("-ddf$", "");
+                if (!api.contains(pkg)) {
+                    copy(p, includedDir.resolve("javadoc").resolve(name));
+                    continue;
+                }
                 copy(p, outDir.resolve("javadoc").resolve(name));
                 if (!name.endsWith("-ddf.xml")) {
-                    packages.add(name.substring(0, name.length() - 4));
+                    packages.add(pkg);
                 }
             }
         } catch (IOException e) {
