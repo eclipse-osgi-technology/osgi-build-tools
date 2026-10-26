@@ -1,50 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Contributors to the Eclipse Foundation.
+
+  This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License 2.0
+  which is available at https://www.eclipse.org/legal/epl-2.0/
+  SPDX-License-Identifier: EPL-2.0
+
+  Contributors:
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.eclipse.osgi-technology</groupId>
-		<artifactId>org.eclipse.osgi-technology.pom.parent</artifactId>
-		<version>0.0.1</version>
-		<relativePath/>
-	</parent>
-	<groupId>org.eclipse.osgi-technology.build.tools</groupId>
-	<artifactId>build-tools-parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>Eclipse OSGi Technology Build Tools</name>
-	<description>Parent POM for the OSGi Technology project build tools</description>
-	
-	<scm>
-		<url>https://github.com/eclipse-osgi-technology/osgi-build-tools</url>
-		<connection>scm:git:git@github.com:eclipse-osgi-technology/osgi-build-tools.git</connection>
-		<developerConnection>scm:git:git@github.com:eclipse-osgi-technology/osgi-build-tools.git</developerConnection>
-		<tag>release</tag>		
-	</scm>
-	
-	<issueManagement>
- 		<system>GitHub</system>
- 		<url>https://github.com/eclipse-osgi-technology/osgi-build-tools/issues</url>
-	 </issueManagement>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.eclipse.osgi-technology</groupId>
+    <artifactId>org.eclipse.osgi-technology.pom.parent</artifactId>
+    <version>0.0.1</version>
+    <relativePath/>
+  </parent>
+  <groupId>org.eclipse.osgi-technology.build.tools</groupId>
+  <artifactId>build-tools-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Eclipse OSGi Technology Build Tools</name>
+  <description>Parent POM for the OSGi Technology project build tools</description>
 
-	<organization>
-		<name>Eclipse Foundation - OSGi Technology Project</name>
-	</organization>
- 
-	<developers>
-		<developer>
-			<id>timothyjward</id>
-			<name>Tim Ward</name>
-			<email>timothyjward@apache.org</email>
-			<organization>Kentyou</organization>
-		</developer>
-	</developers>
+  <scm>
+    <url>https://github.com/eclipse-osgi-technology/osgi-build-tools</url>
+    <connection>scm:git:git@github.com:eclipse-osgi-technology/osgi-build-tools.git</connection>
+    <developerConnection>scm:git:git@github.com:eclipse-osgi-technology/osgi-build-tools.git</developerConnection>
+    <tag>release</tag>
+  </scm>
 
-	<licenses>
-		<license>
-			<name>Eclipse Public License 2.0</name>
-			<url>https://opensource.org/licenses/EPL-2.0</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-	
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/eclipse-osgi-technology/osgi-build-tools/issues</url>
+  </issueManagement>
+
+  <organization>
+    <name>Eclipse Foundation - OSGi Technology Project</name>
+  </organization>
+
+  <developers>
+    <developer>
+      <id>timothyjward</id>
+      <name>Tim Ward</name>
+      <email>timothyjward@apache.org</email>
+      <organization>Kentyou</organization>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Eclipse Public License 2.0</name>
+      <url>https://opensource.org/licenses/EPL-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
 </project>

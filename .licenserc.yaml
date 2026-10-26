@@ -12,10 +12,11 @@ header:
 
       Contributors:
 
+    # EPL-2.0, or Apache-2.0 for the code from the OSGi specification project
     pattern: |
-      This program and the accompanying materials are made
+      (This program and the accompanying materials are made
       available under the terms of the Eclipse Public License 2.0
-      which is available at https://www.eclipse.org/legal/epl-2.0/
+      which is available at https://www.eclipse.org/legal/epl-2.0/|Licensed under the Apache License, Version 2.0)
 
   paths-ignore:
     - 'dist'
@@ -46,5 +47,22 @@ header:
     - 'license.templates'
     - '**/logback-test.xml'
     - '**/*.svg'
+    # third-party: docbook-xsl with its webhelp script, highlight.js, the fonts
+    - '**/docbook/docbook-xsl/**'
+    - '**/html-resources/js/main.js'
+    - '**/html-resources/js/highlight.pack.js'
+    - '**/html-resources/css/github.css'
+    - '**/src/main/resources/fonts/**'
+    - '**/THIRD-PARTY.txt'
+    # taken over from the OSGi specification build, which has no headers there
+    - '**/docbook/xsl/custom-fo.xsl'
+    - '**/docbook/xsl/custom-html.xsl'
+    - '**/docbook/xsl/custom-html-common.xsl'
+    - '**/docbook/xsl/custom-profile.xsl'
+    - '**/docbook/xsl/javadoc2docbook.xsl'
+    - '**/docbook/xsl/html-resources/css/custom.css'
+    - '**/fop/fop-osgi.xconf'
+    # schemas of the tests: their prolog is what the tests check
+    - '**/test-projects/*/xmlns/**'
 
   comment: always

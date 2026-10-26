@@ -37,3 +37,29 @@ insert_final_newline = unset
 trim_trailing_whitespace = unset
 indent_style = unset
 indent_size = unset
+
+# Taken over as they are: the profiling stylesheets of docbook-xsl, and the
+# stylesheets, tools and test chapter of the OSGi specification build
+[maven-plugins/osgi-docbook-maven-plugin/src/main/resources/docbook/docbook-xsl/**]
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+[maven-plugins/osgi-docbook-maven-plugin/src/main/resources/docbook/{book/book-setup.xsl,xsl/*.xsl}]
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+[maven-plugins/osgi-docbook-maven-plugin/src/main/java/org/osgi/tools/{fop,xmldoclet}/**]
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+[maven-plugins/osgi-docbook-maven-plugin/src/test/resources/test-projects/simple/src/main/resources/spec/**]
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
