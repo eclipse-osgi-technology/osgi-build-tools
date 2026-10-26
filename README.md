@@ -8,7 +8,7 @@ Maven reactor containing Maven plugins and their supporting build configuration.
 The repository currently provides:
 
 - `osgi-docbook-maven-plugin`: generates an OSGi specification PDF and HTML
-	site from a DocBook chapter and the Java API documentation in the project.
+    site from a DocBook chapter and the Java API documentation in the project.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ The repository currently provides:
 - A full JDK, not only a JRE. The PDF plugin invokes the JDK Javadoc tool.
 - Apache Maven 3.9 or newer
 - Network access to Maven Central on the first build, so Maven can download
-	dependencies and plugins
+    dependencies and plugins
 
 Use `java -version` and `mvn -version` to check the selected Java runtime and
 Maven installation. Use a JDK that supports the Java language level configured
@@ -61,27 +61,27 @@ Bind the goals for the formats you need:
 
 ```xml
 <build>
-	<plugins>
-		<plugin>
-			<groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
-			<artifactId>osgi-docbook-maven-plugin</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<executions>
-				<execution>
-					<id>spec-pdf</id>
-					<goals>
-						<goal>pdf</goal>
-					</goals>
-				</execution>
-				<execution>
-					<id>spec-html</id>
-					<goals>
-						<goal>html</goal>
-					</goals>
-				</execution>
-			</executions>
-		</plugin>
-	</plugins>
+    <plugins>
+        <plugin>
+            <groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
+            <artifactId>osgi-docbook-maven-plugin</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <executions>
+                <execution>
+                    <id>spec-pdf</id>
+                    <goals>
+                        <goal>pdf</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>spec-html</id>
+                    <goals>
+                        <goal>html</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
 </build>
 ```
 
@@ -105,20 +105,20 @@ every source file, so a build that runs both goals only generates it once.
 The `pdf` goal creates the following files in `target/spec/pdf`:
 
 - `<final-name>.fo`: the generated XSL-FO document, attached with classifier
-	`specification` and type `fo`
+    `specification` and type `fo`
 - `<final-name>.pdf`: the generated PDF, attached with classifier
-	`specification` and type `pdf`
+    `specification` and type `pdf`
 
 The `html` goal creates a chunked XHTML site in `target/spec/html`, with the
 same layout as the specification pages on docs.osgi.org:
 
 - `index.html`: the book title page and table of contents
 - `<chapter id>.html`: one page per chapter, named after its `xml:id`, plus
-	`LICENSE.html` and `preface.html`
+    `LICENSE.html` and `preface.html`
 - `css/`, `js/` and `images/`: the style sheets, scripts (including
-	highlight.js for code listings), logo, draft watermark and the images of the
-	chapter. SVG images are used as they are, and are referred to by file name,
-	so every image in a chapter needs a distinct file name.
+    highlight.js for code listings), logo, draft watermark and the images of the
+    chapter. SVG images are used as they are, and are referred to by file name,
+    so every image in a chapter needs a distinct file name.
 
 It also creates `target/<final-name>-html.zip` from the site, attached with
 classifier `specification-html` and type `zip`.
@@ -161,13 +161,13 @@ For example:
 
 ```xml
 <plugin>
-	<groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
-	<artifactId>osgi-docbook-maven-plugin</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<configuration>
-		<chapterSource>src/main/resources/spec/custom-spec.xml</chapterSource>
-		<specTitle>My OSGi Specification</specTitle>
-	</configuration>
+    <groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
+    <artifactId>osgi-docbook-maven-plugin</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <configuration>
+        <chapterSource>src/main/resources/spec/custom-spec.xml</chapterSource>
+        <specTitle>My OSGi Specification</specTitle>
+    </configuration>
 </plugin>
 ```
 
@@ -175,8 +175,8 @@ The corresponding command-line properties are:
 
 ```sh
 mvn compile \
-	-Dosgi.docbook.spec.source=src/main/resources/spec/custom-spec.xml \
-	-Dosgi.docbook.spec.title="My OSGi Specification"
+    -Dosgi.docbook.spec.source=src/main/resources/spec/custom-spec.xml \
+    -Dosgi.docbook.spec.title="My OSGi Specification"
 ```
 
 ### DocBook archive of a specification project
@@ -202,12 +202,12 @@ specification module with packaging `pom`:
 
 ```xml
 <configuration>
-	<chapterSources>
-		<chapterSource>service.cm/spec.xml</chapterSource>
-	</chapterSources>
-	<apiSourceRoots>
-		<apiSourceRoot>${project.basedir}/../api/src/main/java</apiSourceRoot>
-	</apiSourceRoots>
+    <chapterSources>
+        <chapterSource>service.cm/spec.xml</chapterSource>
+    </chapterSources>
+    <apiSourceRoots>
+        <apiSourceRoot>${project.basedir}/../api/src/main/java</apiSourceRoot>
+    </apiSourceRoots>
 </configuration>
 ```
 
@@ -235,10 +235,10 @@ can be checked in with the book.
 
 ```xml
 <configuration>
-	<bookSource>${project.basedir}/src/main/book/book.xml</bookSource>
-	<docbooks>
-		<docbook>org.osgi.spec:org.osgi.service.cm:${org.osgi.service.cm.version}</docbook>
-	</docbooks>
+    <bookSource>${project.basedir}/src/main/book/book.xml</bookSource>
+    <docbooks>
+        <docbook>org.osgi.spec:org.osgi.service.cm:${org.osgi.service.cm.version}</docbook>
+    </docbooks>
 </configuration>
 ```
 
@@ -282,7 +282,7 @@ why.
 
 The link index,
 `src/main/resources/docbook/links/osgi-spec-index.xml`, is generated from the
-DocBook sources of the legacy build in https://github.com/osgi/osgi by
+DocBook sources of the legacy build in <https://github.com/osgi/osgi> by
 `src/tools/link-index.xsl`. Regenerate it when a new release is published on
 docs.osgi.org. Each book is given as `<path under the base URL>=<book.xml URI>`,
 and earlier books take precedence for ids that appear in more than one book:
@@ -294,8 +294,8 @@ git clone --depth 1 --branch r8-core-final-rerelease https://github.com/osgi/osg
 cd maven-plugins/osgi-docbook-maven-plugin
 mvn dependency:build-classpath -Dmdep.outputFile="$SRC/cp.txt"
 java -cp "$(cat "$SRC/cp.txt")" net.sf.saxon.Transform -it -xsl:src/tools/link-index.xsl \
-	-o:src/main/resources/docbook/links/osgi-spec-index.xml \
-	"books=osgi.cmpn/8.1.0/=file:$SRC/cmpn/osgi.specs/docbook/cmpn/book.xml osgi.core/8.0.0/=file:$SRC/core/osgi.specs/docbook/core/book.xml"
+    -o:src/main/resources/docbook/links/osgi-spec-index.xml \
+    "books=osgi.cmpn/8.1.0/=file:$SRC/cmpn/osgi.specs/docbook/cmpn/book.xml osgi.core/8.0.0/=file:$SRC/core/osgi.specs/docbook/core/book.xml"
 ```
 
 ## License
