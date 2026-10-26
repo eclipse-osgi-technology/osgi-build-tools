@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,10 +53,20 @@ import org.junit.jupiter.api.Test;
 /**
  * The specification module of a repository: the docbook goal packs its
  * chapters and the DocBook of its API, the pdf and html goals render that
- * archive with the javadoc of other projects from their sources.
+ * archive with the javadoc of other projects from their sources, and a book is
+ * assembled from the archives.
  */
 @MojoTest
 class DocbookArchiveTest {
+
+    /** The javadoc of another project, as its DocBook archive has it */
+    private static final String FOREIGN_JAVADOC = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <section version="5.0" xml:id="org.osgi.service.foreign" xmlns="http://docbook.org/ns/docbook">
+                <title>org.osgi.service.foreign</title>
+                <para>foreign-javadoc-marker</para>
+            </section>
+            """;
 
     @Test
     @InjectMojo(goal = "docbook")
@@ -167,6 +178,62 @@ class DocbookArchiveTest {
     }
 
     @Test
+    @Basedir("/test-projects/repo/spec")
+    public void testBook(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook,
+            @InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
+        MavenProject project = project(docbook);
+        docbook.execute();
+
+        // a book assembled from the archive of the project and the one of the
+        // other project, both unpacked in the fallback directory: the tests
+        // have no Maven repositories
+        Path fallback = Path.of(project.getBuild().getDirectory(), "fallback");
+        unzip(attached(project, "docbook").getFile(), fallback.resolve("org.osgi.service.repo/1.0.0"));
+        unpacked(fallback, "org.osgi.service.foreign", FOREIGN_JAVADOC);
+        project.getAttachedArtifacts().clear();
+        MojoExtension.setVariableValueToObject(pdf, "project", project);
+        MojoExtension.setVariableValueToObject(pdf, "bookSource",
+                new File(project.getBasedir(), "../book/book.xml"));
+        MojoExtension.setVariableValueToObject(pdf, "docbooks",
+                List.of("org.osgi.spec:org.osgi.service.repo:1.0.0", "org.osgi.spec:org.osgi.service.foreign:1.0.0"));
+        MojoExtension.setVariableValueToObject(pdf, "docbookFallback", fallback.toFile());
+        pdf.execute();
+
+        String fo = Files.readString(attached(project, "specification", "fo").getFile().toPath(), UTF_8);
+        for (String marker : List.of("Test Book", "chapter-one-marker", "chapter-two-marker", "part-marker",
+                "repo-javadoc-marker", "foreign-javadoc-marker")) {
+            assertTrue(fo.contains(marker), "Missing " + marker);
+        }
+        Path staged = Path.of(project.getBuild().getDirectory(), "spec", "book");
+        assertTrue(Files.isRegularFile(staged.resolve("chapters/repo.one/one-classes.svg")));
+        assertTrue(Files.isRegularFile(staged.resolve("javadoc/org.osgi.service.foreign.xml")));
+
+        // in neither place
+        MojoExtension.setVariableValueToObject(pdf, "docbooks",
+                List.of("org.osgi.spec:org.osgi.service.foreign:1.0.0", "org.osgi.spec:org.osgi.service.none:2.0.0"));
+        MojoExecutionException e = assertThrows(MojoExecutionException.class, pdf::execute);
+        assertTrue(e.getMessage().contains("[org.osgi.spec:org.osgi.service.none:2.0.0]"), e.getMessage());
+    }
+
+    @Test
+    @Basedir("/test-projects/repo/spec")
+    public void testConflict(@InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(pdf, "project");
+        // two archives with the same file, but different content
+        Path fallback = Path.of(project.getBuild().getDirectory(), "fallback");
+        unpacked(fallback, "org.osgi.service.foreign", FOREIGN_JAVADOC);
+        unpacked(fallback, "other", FOREIGN_JAVADOC.replace("foreign-javadoc-marker", "different"));
+        MojoExtension.setVariableValueToObject(pdf, "bookSource",
+                new File(project.getBasedir(), "../book/book.xml"));
+        MojoExtension.setVariableValueToObject(pdf, "docbooks",
+                List.of("org.osgi.spec:org.osgi.service.foreign:1.0.0", "org.osgi.spec:other:1.0.0"));
+        MojoExtension.setVariableValueToObject(pdf, "docbookFallback", fallback.toFile());
+
+        MojoExecutionException e = assertThrows(MojoExecutionException.class, pdf::execute);
+        assertTrue(e.getMessage().contains("javadoc/org.osgi.service.foreign.xml"), e.getMessage());
+    }
+
+    @Test
     @Basedir("/test-projects/javadoc-only/spec")
     public void testJavadocOnly(@InjectMojo(goal = "docbook") OsgiSpecDocbookMojo docbook,
             @InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
@@ -209,6 +276,27 @@ class DocbookArchiveTest {
     private static void included(OsgiSpecDocbookMojo docbook) throws Exception {
         MojoExtension.setVariableValueToObject(docbook, "includedSourceRoots",
                 List.of(new File("../../javadoc-only/api/src/main/java")));
+    }
+
+    /** An unpacked DocBook archive of version 1.0.0 with the javadoc of org.osgi.service.foreign */
+    private static void unpacked(Path fallback, String artifactId, String javadoc) throws Exception {
+        Path dir = fallback.resolve(artifactId).resolve("1.0.0");
+        Files.createDirectories(dir.resolve("META-INF"));
+        Files.writeString(dir.resolve("META-INF/docbook.properties"), "packages=org.osgi.service.foreign\n");
+        Files.createDirectories(dir.resolve("javadoc"));
+        Files.writeString(dir.resolve("javadoc/org.osgi.service.foreign.xml"), javadoc);
+    }
+
+    private static void unzip(File zip, Path dir) throws Exception {
+        try (ZipFile z = new ZipFile(zip)) {
+            for (ZipEntry e : z.stream().filter(e -> !e.isDirectory()).toList()) {
+                Path target = dir.resolve(e.getName());
+                Files.createDirectories(target.getParent());
+                try (InputStream is = z.getInputStream(e)) {
+                    Files.copy(is, target);
+                }
+            }
+        }
     }
 
     private static Artifact attached(MavenProject project, String classifier) {

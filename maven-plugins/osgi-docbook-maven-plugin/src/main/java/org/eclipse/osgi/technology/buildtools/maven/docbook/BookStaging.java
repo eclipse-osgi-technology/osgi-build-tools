@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.xml.transform.TransformerFactory;
 
@@ -41,11 +43,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Stages the book of a project's own chapters: the archive of the docbook goal
- * and the files around it are merged into one directory, so that every include
- * of the book is a plain relative path.
+ * Stages a complete book: the DocBook archives of the book and the files of
+ * the book itself are merged into one directory, so that every include of the
+ * book is a plain relative path. The book of a project's own chapters is
+ * staged the same way, from the archive of the docbook goal.
  */
 final class BookStaging {
+
+    /**
+     * A DocBook archive: a zip file, or an unpacked archive
+     *
+     * @param id where it comes from, e.g. its coordinates
+     * @param file the zip file or the directory
+     */
+    record Source(String id, Path file) {
+    }
 
     /** The project context key of the archive directory of the docbook goal */
     static final String ARCHIVE = BookStaging.class.getName() + ".archive";
@@ -70,7 +82,7 @@ final class BookStaging {
 
     private final Path dir;
 
-    /** Where each staged file comes from */
+    /** Which archive (or the book) each staged file comes from */
     private final Map<Path, String> origins = new HashMap<>();
 
     /**
@@ -78,6 +90,49 @@ final class BookStaging {
      */
     BookStaging(Path dir) {
         this.dir = dir;
+    }
+
+    /**
+     * @param bookSource the book file; its whole directory is staged
+     * @param sources the DocBook archives of the book
+     * @return the staged book file
+     * @throws MojoExecutionException if a staged file would be replaced by
+     *             different content
+     */
+    Path stage(Path bookSource, List<Source> sources) throws MojoExecutionException {
+        if (!Files.isRegularFile(bookSource)) {
+            throw new MojoExecutionException("The book " + bookSource + " does not exist");
+        }
+        clean();
+
+        if (sources.isEmpty()) {
+            LOG.warn("No DocBook archives, see docbooks");
+        }
+        for (Source s : sources) {
+            try {
+                if (Files.isDirectory(s.file())) {
+                    putAll(s.file(), s.id());
+                } else {
+                    unzip(s.file(), s.id());
+                }
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to stage " + s.id(), e);
+            }
+        }
+
+        Path bookDir = bookSource.toAbsolutePath().getParent();
+        try (Stream<Path> files = Files.walk(bookDir)) {
+            for (Path p : files.filter(Files::isRegularFile).sorted().toList()) {
+                try (InputStream is = Files.newInputStream(p)) {
+                    put(bookDir.relativize(p).toString().replace('\\', '/'), is, "the book");
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to stage the book " + bookDir, e);
+        }
+        checkIncludes();
+        LOG.info("Staged the book and {} DocBook archives in {}", sources.size(), dir);
+        return dir.resolve(bookSource.getFileName().toString());
     }
 
     /**
@@ -171,8 +226,8 @@ final class BookStaging {
     }
 
     /**
-     * Every include of a staged file must be staged too, such as the javadoc
-     * of another project.
+     * Every include of a staged file must be staged too: the javadoc of
+     * another project only comes with its DocBook archive.
      */
     private void checkIncludes() throws MojoExecutionException {
         List<String> missing = new ArrayList<>();
@@ -195,8 +250,24 @@ final class BookStaging {
         if (!missing.isEmpty()) {
             missing.forEach(LOG::error);
             throw new MojoExecutionException("Files included by the book are missing: " + missing
-                    + ". The javadoc of another project comes from its sources, see includedSourceRoots.");
+                    + ". The javadoc of another project comes from its DocBook archive, see docbooks,"
+                    + " or for the chapters of a project from its sources, see includedSourceRoots.");
         }
+    }
+
+    private void unzip(Path file, String origin) throws IOException, MojoExecutionException {
+        try (ZipFile zip = new ZipFile(file.toFile())) {
+            for (ZipEntry e : zip.stream().filter(e -> !e.isDirectory()).toList()) {
+                // every archive has its own description
+                if (e.getName().startsWith("META-INF/")) {
+                    continue;
+                }
+                try (InputStream is = zip.getInputStream(e)) {
+                    put(e.getName(), is, origin);
+                }
+            }
+        }
+        LOG.debug("Staged {}", origin);
     }
 
     private void put(String name, InputStream is, String origin) throws IOException, MojoExecutionException {
