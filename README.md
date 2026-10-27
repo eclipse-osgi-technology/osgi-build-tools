@@ -304,22 +304,21 @@ The version is set in one place, `-Drevision=...` in
 [`.mvn/maven.config`](.mvn/maven.config). On `main` it is always the next
 version with `-SNAPSHOT`, and every push to `main` deploys snapshot artifacts.
 
-To release, a maintainer:
+The workflows in `.github/workflows` are stubs that call the reusable
+workflows of [eclipse-osgi-technology/.github](https://github.com/eclipse-osgi-technology/.github).
 
-1. Checks that the build of `main` is green and that `.mvn/maven.config` holds
-   the version to release, e.g. `-Drevision=0.0.1-SNAPSHOT` for 0.0.1.
-2. [Drafts a new GitHub release](https://github.com/eclipse-osgi-technology/osgi-build-tools/releases/new)
-   on `main` with a new tag named exactly like the version, e.g. `0.0.1`, or
-   `0.0.1.RC1` for a release candidate marked as pre-release.
-3. Publishes the release. The `.github/workflows/java_release.yml` workflow
-   builds and tests the tag with `-Drevision=<tag>` and deploys the signed
-   artifacts to Maven Central.
-4. Opens a pull request that moves `.mvn/maven.config` to the next snapshot
-   version, e.g. `-Drevision=0.0.2-SNAPSHOT`.
+To release 0.0.1, a maintainer:
 
-If the workflow fails, re-run it from the Actions tab. If the tagged commit
-needs a fix, delete the release and its tag and create them again on the fixed
-commit. A version that has reached Maven Central cannot be released again.
+1. Merges a pull request that sets `.mvn/maven.config` to `-Drevision=0.0.1`.
+2. [Publishes a new GitHub release](https://github.com/eclipse-osgi-technology/osgi-build-tools/releases/new)
+   on that commit with the new tag `0.0.1`, or pushes the tag `0.0.1`. The
+   `.github/workflows/release.yml` workflow checks that the tag equals the
+   version, builds it and deploys the signed artifacts to Maven Central.
+3. Merges a pull request that moves `.mvn/maven.config` to
+   `-Drevision=0.0.2-SNAPSHOT`.
+
+If the workflow fails, re-run it from the Actions tab. A version that has
+reached Maven Central cannot be released again.
 
 ## License
 

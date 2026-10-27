@@ -1,0 +1,27 @@
+# CI logic lives in eclipse-osgi-technology/.github (reusable workflow).
+# Every push to main deploys a fresh SNAPSHOT to Sonatype Central
+# snapshots; the weekly schedule keeps it fresh in quiet times.
+name: build
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 1'
+permissions:
+  contents: read
+jobs:
+  build:
+    permissions:
+      contents: read
+      # the test report is published as a check run
+      checks: write
+    uses: eclipse-osgi-technology/.github/.github/workflows/maven-build.yml@main
+    secrets: inherit
+    with:
+      jdks: '["21"]'
+      jdk-main: '21'
+      # no bnd in this repo
+      bnd-next: false
+      deploy: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
