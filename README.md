@@ -298,6 +298,29 @@ java -cp "$(cat "$SRC/cp.txt")" net.sf.saxon.Transform -it -xsl:src/tools/link-i
     "books=osgi.cmpn/8.1.0/=file:$SRC/cmpn/osgi.specs/docbook/cmpn/book.xml osgi.core/8.0.0/=file:$SRC/core/osgi.specs/docbook/core/book.xml"
 ```
 
+## Release
+
+The version is set in one place, `-Drevision=...` in
+[`.mvn/maven.config`](.mvn/maven.config). On `main` it is always the next
+version with `-SNAPSHOT`, and every push to `main` deploys snapshot artifacts.
+
+To release, a maintainer:
+
+1. Checks that the build of `main` is green and that `.mvn/maven.config` holds
+   the version to release, e.g. `-Drevision=0.0.1-SNAPSHOT` for 0.0.1.
+2. [Drafts a new GitHub release](https://github.com/eclipse-osgi-technology/osgi-build-tools/releases/new)
+   on `main` with a new tag named exactly like the version, e.g. `0.0.1`, or
+   `0.0.1.RC1` for a release candidate marked as pre-release.
+3. Publishes the release. The `.github/workflows/java_release.yml` workflow
+   builds and tests the tag with `-Drevision=<tag>` and deploys the signed
+   artifacts to Maven Central.
+4. Opens a pull request that moves `.mvn/maven.config` to the next snapshot
+   version, e.g. `-Drevision=0.0.2-SNAPSHOT`.
+
+If the workflow fails, re-run it from the Actions tab. If the tagged commit
+needs a fix, delete the release and its tag and create them again on the fixed
+commit. A version that has reached Maven Central cannot be released again.
+
 ## License
 
 This project is distributed under the Apache License 2.0. See the source files
