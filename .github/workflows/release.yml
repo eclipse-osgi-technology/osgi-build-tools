@@ -1,0 +1,17 @@
+# CI logic lives in eclipse-osgi-technology/.github (reusable workflow).
+# A release is cut by pushing a tag that equals the version (no prefix), or
+# by publishing a GitHub release with that new tag; the central workflow
+# refuses a tag that does not match .mvn/maven.config.
+name: release
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+permissions:
+  contents: read
+jobs:
+  release:
+    uses: eclipse-osgi-technology/.github/.github/workflows/maven-release.yml@main
+    secrets: inherit
+    with:
+      jdk: '21'
