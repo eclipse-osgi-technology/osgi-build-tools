@@ -14,7 +14,7 @@
 
   <groupId>org.eclipse.osgi-technology.build.tools</groupId>
   <artifactId>reactor</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
   <name>Eclipse OSGi Technology Build Tools</name>
   <description>Reactor POM for the OSGi Technology project build tools (not deployed)</description>

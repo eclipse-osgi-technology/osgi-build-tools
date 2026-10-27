@@ -19,7 +19,7 @@
   </parent>
   <groupId>org.eclipse.osgi-technology.build.tools</groupId>
   <artifactId>build-tools-parent</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
   <name>Eclipse OSGi Technology Build Tools</name>
   <description>Parent POM for the OSGi Technology project build tools</description>
@@ -28,7 +28,7 @@
     <url>https://github.com/eclipse-osgi-technology/osgi-build-tools</url>
     <connection>scm:git:git@github.com:eclipse-osgi-technology/osgi-build-tools.git</connection>
     <developerConnection>scm:git:git@github.com:eclipse-osgi-technology/osgi-build-tools.git</developerConnection>
-    <tag>release</tag>
+    <tag>${revision}</tag>
   </scm>
 
   <issueManagement>
@@ -56,5 +56,20 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <build>
+    <plugins>
+      <!-- the version is -Drevision in .mvn/maven.config, or the tag of a
+        release: the deployed POMs get it resolved -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <configuration>
+          <flattenMode>resolveCiFriendliesOnly</flattenMode>
+          <updatePomFile>true</updatePomFile>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

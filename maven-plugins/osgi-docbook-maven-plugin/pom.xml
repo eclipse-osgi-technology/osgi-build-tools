@@ -17,7 +17,7 @@
   <parent>
     <groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
     <artifactId>maven-plugins</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
   </parent>
   <artifactId>osgi-docbook-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>

@@ -6,6 +6,20 @@ on:
       - 'main'
 
 jobs:
+  snapshot:
+    if: ${{ github.repository == 'eclipse-osgi-technology/osgi-build-tools' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Validate snapshot version
+        # main deploys snapshots, a release is made from a GitHub release
+        run: |
+          if ! grep -q -E '^-Drevision=[^ ]+-SNAPSHOT$' .mvn/maven.config; then
+            echo "::error::main requires a SNAPSHOT version in .mvn/maven.config, but found: $(cat .mvn/maven.config)"
+            exit 1
+          fi
+
   publish:
+    needs: snapshot
     uses: eclipse-osgi-technology/.github/.github/workflows/reuse_java_deploy.yml@main
     secrets: inherit
