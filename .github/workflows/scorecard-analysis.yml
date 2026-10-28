@@ -1,4 +1,6 @@
-# Scorecard logic lives in eclipse-osgi-technology/.github (reusable workflow).
+# Managed by the otterdog blueprint
+# https://github.com/eclipse-osgi-technology/.eclipsefdn/blob/main/otterdog/blueprints/scorecard.yml
+# change it there; the logic lives in eclipse-osgi-technology/.github.
 name: Scorecard analysis
 on:
   branch_protection_rule:
