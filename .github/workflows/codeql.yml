@@ -1,4 +1,6 @@
-# CodeQL logic lives in eclipse-osgi-technology/.github (reusable workflow).
+# Managed by the otterdog blueprint
+# https://github.com/eclipse-osgi-technology/.eclipsefdn/blob/main/otterdog/blueprints/codeql.yml
+# change it there; the logic lives in eclipse-osgi-technology/.github.
 name: CodeQL
 on:
   push:
