@@ -50,7 +50,7 @@ mvn install
 
 The root POM is a convenience reactor and is not deployed. The plugin artifact
 is built at
-`maven-plugins/osgi-docbook-maven-plugin/target/osgi-docbook-maven-plugin-0.0.1-SNAPSHOT.jar`.
+`maven-plugins/osgi-docbook-maven-plugin/target/osgi-docbook-maven-plugin-0.0.1.jar`.
 
 ## Use the DocBook plugin
 
@@ -65,7 +65,7 @@ Bind the goals for the formats you need:
         <plugin>
             <groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
             <artifactId>osgi-docbook-maven-plugin</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
             <executions>
                 <execution>
                     <id>spec-pdf</id>
@@ -163,7 +163,7 @@ For example:
 <plugin>
     <groupId>org.eclipse.osgi-technology.build.tools.maven</groupId>
     <artifactId>osgi-docbook-maven-plugin</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <configuration>
         <chapterSource>src/main/resources/spec/custom-spec.xml</chapterSource>
         <specTitle>My OSGi Specification</specTitle>
