@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) Contributors to the Eclipse Foundation
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    SPDX-License-Identifier: Apache-2.0
+-->
+<!-- A book with a link to a chapter that it does not contain -->
+<book version="5.0" xml:id="links.book" xmlns="http://docbook.org/ns/docbook">
+  <info>
+    <title>Links Book</title>
+
+    <releaseinfo xml:id="links.book-release">Release 1</releaseinfo>
+
+    <pubdate>January 2026</pubdate>
+
+    <copyright>
+      <year>2026</year>
+
+      <holder>Eclipse Foundation</holder>
+    </copyright>
+  </info>
+
+  <chapter label="1" xml:id="links.chapter">
+    <title>Links</title>
+
+    <section>
+      <title>A link out of the book</title>
+
+      <para>See <xref linkend="service.cm"/>.</para>
+    </section>
+  </chapter>
+</book>

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -125,6 +126,18 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     }
 
     @Override
+    URL linkIndex() throws MojoExecutionException {
+        if (externalLinkIndex == null) {
+            return super.linkIndex();
+        }
+        try {
+            return externalLinkIndex.toPath().toAbsolutePath().toUri().toURL();
+        } catch (MalformedURLException e) {
+            throw new MojoExecutionException("Not a link index: " + externalLinkIndex, e);
+        }
+    }
+
+    @Override
     void generate(SpecBook book, Path htmlDir) throws MojoExecutionException {
         // Stale chunks from a renamed chapter must not end up in the zip
         clean(htmlDir);
@@ -151,6 +164,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             transformerFactory.setURIResolver(resolver);
             transformerFactory.setFeature(FeatureKeys.XINCLUDE, true);
             Transformer transformer = transformerFactory.newTransformer(resolver.stylesheet());
+            links.install(transformer);
             LOG.debug("Loaded OSGi specification docbook to HTML transformer");
 
             // The chunks are written relative to the main output, which only
