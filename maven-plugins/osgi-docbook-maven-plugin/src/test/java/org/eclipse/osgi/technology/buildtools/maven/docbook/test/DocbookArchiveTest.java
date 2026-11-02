@@ -43,6 +43,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.testing.ArtifactStubFactory;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.osgi.technology.buildtools.maven.docbook.OsgiSpecDocbookMojo;
@@ -213,6 +214,26 @@ class DocbookArchiveTest {
                 List.of("org.osgi.spec:org.osgi.service.foreign:1.0.0", "org.osgi.spec:org.osgi.service.none:2.0.0"));
         MojoExecutionException e = assertThrows(MojoExecutionException.class, pdf::execute);
         assertTrue(e.getMessage().contains("[org.osgi.spec:org.osgi.service.none:2.0.0]"), e.getMessage());
+    }
+
+    @Test
+    @Basedir("/test-projects/repo/spec")
+    public void testBookLinks(@InjectMojo(goal = "pdf") OsgiSpecPdfMojo pdf) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(pdf, "project");
+        project.setVersion("1.0.0");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(pdf, "bookSource",
+                new File(project.getBasedir(), "../links-book/book.xml"));
+
+        // a complete book must contain the target of every link
+        MojoFailureException e = assertThrows(MojoFailureException.class, pdf::execute);
+        assertEquals("Links without a target in the book: [service.cm]", e.getMessage());
+
+        MojoExtension.setVariableValueToObject(pdf, "failOnUnresolvedLinks", false);
+        project.getAttachedArtifacts().clear();
+        pdf.execute();
+        assertEquals(List.of("fo", "pdf"), project.getAttachedArtifacts().stream().map(Artifact::getType).toList());
     }
 
     @Test

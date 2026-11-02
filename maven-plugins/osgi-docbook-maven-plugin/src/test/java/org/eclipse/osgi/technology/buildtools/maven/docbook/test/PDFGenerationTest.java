@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.maven.api.plugin.testing.Basedir;
@@ -91,5 +93,23 @@ class PDFGenerationTest {
 
         String fo = Files.readString(project.getAttachedArtifacts().get(0).getFile().toPath());
         assertFalse(DRAFT.matcher(fo).find(), "a release is a draft");
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
+    public void testLinksToOtherSpecifications(OsgiSpecPdfMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-links.xml");
+        // a chapter links to other specifications: warnings, not a failure
+        mojo.execute();
+
+        Object links = MojoExtension.getVariableValueFromObject(mojo, "links");
+        Map<String, Set<String>> ids = MojoExtension.getVariableValueFromObject(links, "links");
+        assertEquals(Set.of("service.cm", "service.namespaces-osgi.service.namespace", "no.such.id"), ids.keySet());
+        assertEquals(Set.of("125.1"), ids.get("service.namespaces-osgi.service.namespace"));
+        assertEquals("pdf", project.getAttachedArtifacts().get(1).getType());
     }
 }

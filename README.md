@@ -136,6 +136,15 @@ the published specifications, using an index of the chapters, sections and
 API packages of the OSGi Compendium Release 8.1 and Core Release 8 that is
 bundled with the plugin. References that are not in the index stay as text.
 
+The build reports each such reference once, as a warning that names the
+published target, e.g. `Link to service.cm from 122.9.5 is to another
+specification, 104 Configuration Admin Service Specification in
+osgi.cmpn/8.1.0/; it resolves in the complete book`. A reference that is not
+in the index either is logged as an error, but does not fail the build. A
+complete book (`bookSource`) must contain the target of every reference, so
+there each one is an error and fails the build.
+`osgi.docbook.failOnUnresolvedLinks` overrides either default.
+
 ### Plugin properties
 
 Override the defaults with Maven properties or plugin configuration:
@@ -155,6 +164,7 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.draft` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
 | `osgi.docbook.release.version` | `${project.version}` | The release shown in the HTML page titles, e.g. `8` |
 | `osgi.docbook.book.source` | none | A complete book instead of a single chapter, see below |
+| `osgi.docbook.failOnUnresolvedLinks` | `true` for a complete book, else `false` | Fail the build on a reference whose target is not in the book, see [Links to other specifications](#links-to-other-specifications) |
 | `osgi.docbook.docbook.skip` | `false` | Skip the `docbook` goal |
 
 For example:

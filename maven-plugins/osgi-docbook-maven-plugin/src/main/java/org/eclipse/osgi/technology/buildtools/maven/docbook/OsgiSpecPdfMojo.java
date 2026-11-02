@@ -109,6 +109,7 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
             // We want the FO file to be complete
             transformerFactory.setFeature(FeatureKeys.XINCLUDE, true);
             Transformer transformer = transformerFactory.newTransformer(resolver.stylesheet());
+            links.install(transformer);
             transformer.setParameter("draft.mode", draftMode);
             // custom-fo.xsl asks for indentation, which Saxon also applies to
             // mixed content: it puts spaces around links and inline elements

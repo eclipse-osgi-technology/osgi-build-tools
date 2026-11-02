@@ -19,6 +19,7 @@ package org.eclipse.osgi.technology.buildtools.maven.docbook;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -112,6 +113,17 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
     @Parameter(property = "osgi.docbook.release.version", defaultValue = "${project.version}")
     String releaseVersion;
 
+    /**
+     * Fail on a link whose target is not in the book. By default a complete
+     * book ({@code bookSource}) fails. A chapter, or the chapters of one
+     * repository, link to other specifications, which only the complete books
+     * contain: such a link is a warning when its target is in the index of the
+     * published specifications, and an error that does not fail the build
+     * otherwise.
+     */
+    @Parameter(property = "osgi.docbook.failOnUnresolvedLinks")
+    Boolean failOnUnresolvedLinks;
+
     @Inject
     MavenProject project;
 
@@ -132,6 +144,9 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
 
     /** The build directory shared by the output formats */
     Path specDir;
+
+    /** The links of the book whose target is not in the book */
+    UnresolvedLinks links;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -187,7 +202,23 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
                     project.getVersion(), newTransformerFactory());
         }
 
+        links = new UnresolvedLinks(failOnUnresolvedLinks != null ? failOnUnresolvedLinks : bookSource != null,
+                linkIndex());
         generate(book, formatDir);
+        links.report();
+    }
+
+    /**
+     * @return the index of the published specifications, which tells a link
+     *         to another specification from a link without any target
+     * @throws MojoExecutionException
+     */
+    URL linkIndex() throws MojoExecutionException {
+        URL index = AbstractOsgiSpecMojo.class.getResource(UnresolvedLinks.INDEX);
+        if (index == null) {
+            throw new MojoExecutionException("Missing plugin resource " + UnresolvedLinks.INDEX);
+        }
+        return index;
     }
 
     /**
