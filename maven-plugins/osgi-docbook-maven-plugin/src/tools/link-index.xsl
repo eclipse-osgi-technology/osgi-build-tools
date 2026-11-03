@@ -41,8 +41,10 @@
   exclude-result-prefixes="xs d xi map osgi"
   version="3.0">
 
-<!-- Line breaks are written explicitly: Saxon-HE indents by 3 and wraps
-     long attribute lists, which does not match .editorconfig -->
+<!--
+  Line breaks are written explicitly: Saxon-HE indents by 3 and wraps
+  long attribute lists, which does not match .editorconfig
+-->
 <xsl:output method="xml" indent="no" encoding="UTF-8"/>
 
 <xsl:param name="books" as="xs:string" required="yes"/>
@@ -52,14 +54,14 @@
 <xsl:function name="osgi:versions" as="map(xs:string, xs:string)">
   <xsl:param name="path" as="xs:string"/>
   <xsl:variable name="uri" as="xs:string?"
-                select="(for $pair in tokenize(normalize-space($versions), ' ')
-                         return if (substring-before($pair, '=') = $path) then substring-after($pair, '=')
-                                else ())[1]"/>
+      select="(for $pair in tokenize(normalize-space($versions), ' ')
+          return if (substring-before($pair, '=') = $path) then substring-after($pair, '=')
+              else ())[1]"/>
   <xsl:sequence select="if (empty($uri)) then map {}
-                        else map:merge(for $line in tokenize(unparsed-text($uri), '\r?\n')[contains(., '=')]
-                                       return map:entry(normalize-space(substring-before($line, '=')),
-                                                        normalize-space(substring-after($line, '='))),
-                                       map {'duplicates': 'use-last'})"/>
+      else map:merge(for $line in tokenize(unparsed-text($uri), '\r?\n')[contains(., '=')]
+          return map:entry(normalize-space(substring-before($line, '=')),
+              normalize-space(substring-after($line, '='))),
+          map {'duplicates': 'use-last'})"/>
 </xsl:function>
 
 <xsl:template name="xsl:initial-template">
@@ -126,7 +128,7 @@
       <package name="{$name}" file="{$file}">
         <xsl:if test="map:contains($package.versions, $name)">
           <xsl:attribute name="version"
-                         select="string-join(tokenize($package.versions($name), '\.')[position() le 2], '.')"/>
+              select="string-join(tokenize($package.versions($name), '\.')[position() le 2], '.')"/>
         </xsl:if>
       </package>
     </xsl:if>
