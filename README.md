@@ -302,18 +302,35 @@ The link index,
 DocBook sources of the legacy build in <https://github.com/osgi/osgi> by
 `src/tools/link-index.xsl`. Regenerate it when a new release is published on
 docs.osgi.org. Each book is given as `<path under the base URL>=<book.xml URI>`,
-and earlier books take precedence for ids that appear in more than one book:
+and earlier books take precedence for ids that appear in more than one book.
+
+The index records the version of each API package, which a chapter shows as
+the version of a package it documents, for example in its release info
+(`<xref endterm="org.osgi.resource-version" .../>` gives `Version 1.0`). The
+versions are those of the `@Version` annotations of the packages in the
+release. `src/tools/package-versions.py` lists them for a checkout, resolving
+the constants that most annotations use, and the `versions` parameter takes
+the list of each book, in the form of `books`. The index keeps the major and
+minor version, as the published chapter does:
 
 ```sh
 SRC=$(mktemp -d)
 git clone --depth 1 --branch 8.1.0.cmpn https://github.com/osgi/osgi.git "$SRC/cmpn"
 git clone --depth 1 --branch r8-core-final-rerelease https://github.com/osgi/osgi.git "$SRC/core"
 cd maven-plugins/osgi-docbook-maven-plugin
+python3 src/tools/package-versions.py "$SRC/cmpn" > "$SRC/cmpn-versions.txt"
+python3 src/tools/package-versions.py "$SRC/core" > "$SRC/core-versions.txt"
 mvn dependency:build-classpath -Dmdep.outputFile="$SRC/cp.txt"
 java -cp "$(cat "$SRC/cp.txt")" net.sf.saxon.Transform -it -xsl:src/tools/link-index.xsl \
     -o:src/main/resources/docbook/links/osgi-spec-index.xml \
+    "versions=osgi.cmpn/8.1.0/=file:$SRC/cmpn-versions.txt osgi.core/8.0.0/=file:$SRC/core-versions.txt" \
     "books=osgi.cmpn/8.1.0/=file:$SRC/cmpn/osgi.specs/docbook/cmpn/book.xml osgi.core/8.0.0/=file:$SRC/core/osgi.specs/docbook/core/book.xml"
 ```
+
+A package that is not in the list of its book has no version in the index, and
+a reference to its version is rendered as the name of the package. A checkout
+holds the packages of every book, in the state of its own release, so a book
+takes its versions from its own checkout.
 
 ## Release
 

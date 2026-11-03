@@ -129,30 +129,47 @@ class PDFGenerationTest {
     @Test
     @InjectMojo(goal = "pdf")
     @Basedir("/test-projects/simple")
-    public void testReleaseInfoLinksToOtherSpecification(OsgiSpecPdfMojo mojo) throws Exception {
+    public void testReleaseInfoShowsVersionOfOtherSpecification(OsgiSpecPdfMojo mojo) throws Exception {
+        // the release info of a chapter, and every page header, show the version of the package
+        assertEquals("Version 1.0", releaseInfoText(mojo, "/links/index-with-version.xml"));
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
+    public void testReleaseInfoWithoutVersionOfOtherSpecification(OsgiSpecPdfMojo mojo) throws Exception {
+        // an index without the version gives the name of the package, not ???
+        assertEquals("org.osgi.resource", releaseInfoText(mojo, "/links/index-without-version.xml"));
+    }
+
+    /** @return the text of the links to org.osgi.resource, which must all be the same */
+    private static String releaseInfoText(OsgiSpecPdfMojo mojo, String index) throws Exception {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
         MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-releaseinfo.xml");
+        MojoExtension.setVariableValueToObject(mojo, "externalLinkIndex",
+                Path.of(PDFGenerationTest.class.getResource(index).toURI()).toFile());
         mojo.execute();
 
         Object links = MojoExtension.getVariableValueFromObject(mojo, "links");
         Map<String, Set<String>> ids = MojoExtension.getVariableValueFromObject(links, "links");
         assertEquals(Set.of(), ids.keySet());
         String fo = Files.readString(project.getAttachedArtifacts().get(0).getFile().toPath());
-        // the release info of a chapter is the line under its title, and in every page header
         assertFalse(fo.contains("???"), "Unresolved reference in the release info");
         Matcher m = Pattern.compile("(?s)<fo:basic-link external-destination=\"url\\(([^)]*)\\)\"[^>]*>(.*?)</fo:basic-link>")
                 .matcher(fo);
+        Set<String> texts = new java.util.TreeSet<>();
         int linked = 0;
         while (m.find()) {
             if (m.group(1).equals("https://docs.osgi.org/specification/osgi.core/8.0.0/framework.api.html#org.osgi.resource")) {
-                // the index has no version text, so it is the name of the package
-                assertEquals("org.osgi.resource", m.group(2).replaceAll("<[^>]*>", "").strip());
+                texts.add(m.group(2).replaceAll("<[^>]*>", "").strip());
                 linked++;
             }
         }
-        assertTrue(linked > 0, "Release info not linked");
+        assertTrue(linked > 1, "The title page and the page headers are not linked");
+        assertEquals(1, texts.size(), texts.toString());
+        return texts.iterator().next();
     }
 
     @Test

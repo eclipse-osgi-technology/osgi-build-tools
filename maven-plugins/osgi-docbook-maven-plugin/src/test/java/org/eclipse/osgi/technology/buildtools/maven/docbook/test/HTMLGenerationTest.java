@@ -38,6 +38,25 @@ class HTMLGenerationTest {
     @Test
     @InjectMojo(goal = "html")
     @Basedir("/test-projects/simple")
+    public void testReleaseInfoShowsVersionOfOtherSpecification(OsgiSpecHtmlMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-releaseinfo.xml");
+        MojoExtension.setVariableValueToObject(mojo, "externalLinkIndex",
+                Path.of(HTMLGenerationTest.class.getResource("/links/index-with-version.xml").toURI()).toFile());
+        mojo.execute();
+
+        String chapter = Files.readString(Path.of(project.getBuild().getDirectory(), "spec", "html", "service.jdbc.html"));
+        // as the published chapter shows the version of the package
+        assertTrue(chapter.contains("href=\"https://docs.osgi.org/specification/osgi.core/8.0.0/framework.api.html#org.osgi.resource\""),
+                "Release info not linked");
+        assertTrue(chapter.contains(">Version 1.0</a>"), "Version of the package missing");
+    }
+
+    @Test
+    @InjectMojo(goal = "html")
+    @Basedir("/test-projects/simple")
     public void testHtml(OsgiSpecHtmlMojo mojo) throws Exception {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(

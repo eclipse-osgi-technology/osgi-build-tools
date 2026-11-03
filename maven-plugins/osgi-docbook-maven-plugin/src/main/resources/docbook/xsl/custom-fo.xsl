@@ -1522,10 +1522,15 @@ actual para elements -->
 <xsl:template match="d:xref[@linkend][empty(key('id', @linkend))][exists(osgi:external-target(@linkend))]">
   <xsl:variable name="target" select="osgi:external-target(@linkend)"/>
   <xsl:variable name="label" select="osgi:external-label($target, @linkend)"/>
+  <!-- An endterm that names the version of a package, as in the release info of a chapter -->
+  <xsl:variable name="version" select="osgi:external-version(@endterm)"/>
   <xsl:call-template name="osgi.external.link">
     <xsl:with-param name="content">
       <fo:inline xsl:use-attribute-sets="xref.properties">
         <xsl:choose>
+          <xsl:when test="exists($version)">
+            <xsl:value-of select="concat('Version ', $version)"/>
+          </xsl:when>
           <!-- As for a section, the title of a chapter is italic in a cross reference -->
           <xsl:when test="osgi:is-chunk($target)">
             <fo:inline font-style="italic"><xsl:value-of select="$label"/></fo:inline>

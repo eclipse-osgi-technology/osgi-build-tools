@@ -78,6 +78,19 @@
 </xsl:function>
 
 <!--
+  The version of the package that an endterm names, e.g. 1.0 for
+  org.osgi.resource-version, which is the version that the published chapter
+  shows for the package. Empty when the index has no version for the package.
+-->
+<xsl:function name="osgi:external-version" as="xs:string?">
+  <xsl:param name="endterm" as="xs:string?"/>
+  <xsl:if test="exists($osgi.external.index) and ends-with($endterm, '-version')">
+    <xsl:sequence select="($osgi.external.index//l:package
+        [@name = substring($endterm, 1, string-length($endterm) - 8)]/@version/string())[1]"/>
+  </xsl:if>
+</xsl:function>
+
+<!--
   The text of an xref to a published target. Javadoc ids are only indexed by
   package, so their text is the member name (PushStream, Promise.then()).
 -->
