@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 
@@ -54,6 +55,9 @@ import net.sf.saxon.lib.FeatureKeys;
  * chapters of the project in one book.
  */
 public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
+
+    /** The bundled index of chapters and packages published on docs.osgi.org, relative to the style sheets */
+    private static final String LINK_INDEX = "../links/osgi-spec-index.xml";
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOsgiSpecMojo.class);
 
@@ -219,6 +223,23 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
             throw new MojoExecutionException("Missing plugin resource " + UnresolvedLinks.INDEX);
         }
         return index;
+    }
+
+    /**
+     * Tells a style sheet where the published specifications are, so that it
+     * links to them the references to other specifications
+     *
+     * @param transformer the transformer of the style sheet
+     * @param enabled false to leave such references as text
+     * @param index an index to use instead of the bundled one
+     * @param baseUrl the URL that the paths of the index are relative to
+     */
+    void externalLinks(Transformer transformer, boolean enabled, File index, String baseUrl) {
+        if (enabled) {
+            transformer.setParameter("external.links.index",
+                    index != null ? index.toPath().toAbsolutePath().toUri().toString() : LINK_INDEX);
+            transformer.setParameter("external.links.base", baseUrl);
+        }
     }
 
     /**

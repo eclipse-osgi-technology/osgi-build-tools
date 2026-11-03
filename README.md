@@ -131,18 +131,22 @@ If that value is unavailable, the plugin uses `<artifactId>.<version>`.
 A specification project holds a single chapter, so references to other
 chapters, such as `<xref linkend="service.event"/>`, and to the Javadoc of
 their packages, such as `<link linkend="org.osgi.util.promise.Promise">`, have
-no target in the book. The PDF renders them as text. The HTML links them to
-the published specifications, using an index of the chapters, sections and
-API packages of the OSGi Compendium Release 8.1 and Core Release 8 that is
-bundled with the plugin. References that are not in the index stay as text.
+no target in the book. The HTML and the PDF link them to the published
+specifications, using an index of the chapters, sections and API packages of
+the OSGi Compendium Release 8.1 and Core Release 8 that is bundled with the
+plugin. The PDF shows the title of the chapter or section, or the name of the
+Javadoc member, as a link to the published page. References that are not in
+the index are rendered as `???` in the PDF and as text in the HTML.
 
-The build reports each such reference once, as a warning that names the
-published target, e.g. `Link to service.cm from 122.9.5 is to another
+The build reports a reference whose target is not in the book and is not
+linked, once per id. With `externalLinks` set to `false` this is a warning that
+names the published target, e.g. `Link to service.cm from 122.9.5 is to another
 specification, 104 Configuration Admin Service Specification in
 osgi.cmpn/8.1.0/; it resolves in the complete book`. A reference that is not
 in the index either is logged as an error, but does not fail the build. A
 complete book (`bookSource`) must contain the target of every reference, so
-there each one is an error and fails the build.
+there each one is an error and fails the build, and the PDF does not link to
+the published specifications.
 `osgi.docbook.failOnUnresolvedLinks` overrides either default.
 
 ### Plugin properties
@@ -158,6 +162,9 @@ Override the defaults with Maven properties or plugin configuration:
 | `osgi.docbook.html.externalLinks` | `true` | Link references outside the book to the published specifications; `false` renders them as text |
 | `osgi.docbook.html.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | The URL that the book paths of the link index are relative to |
 | `osgi.docbook.html.externalLinkIndex` | none | A link index file to use instead of the bundled one |
+| `osgi.docbook.pdf.externalLinks` | `true` | As `osgi.docbook.html.externalLinks`, for the PDF of a chapter |
+| `osgi.docbook.pdf.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | As `osgi.docbook.html.externalLinkBaseUrl`, for the PDF |
+| `osgi.docbook.pdf.externalLinkIndex` | none | As `osgi.docbook.html.externalLinkIndex`, for the PDF |
 | `osgi.docbook.html.rootFilename` | `index` | File name of the page with the title and table of contents; the published books use `toc` |
 | `osgi.docbook.html.chapterImageNames` | `false` | Prefix SVG image names with the chapter label (`002-delegation-model.svg`), as the published books do; a complete book needs this when chapters use the same file name |
 | `osgi.docbook.html.rasterizeImages` | `false` | Convert SVG images into PNG images (scale 2, 300 dpi), as the published books do |
