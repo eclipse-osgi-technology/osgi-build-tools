@@ -64,11 +64,18 @@
   </xsl:choose>
 </xsl:template>
 
-<!-- Without this DocBook renders an xref to an id outside the book as ??? -->
+<!--
+  Without this DocBook renders an xref to an id outside the book as ???. An
+  endterm that names the version of a package, as in the release info of a
+  chapter, gives the version that the published chapter shows.
+-->
 <xsl:template match="d:xref[@linkend][empty(key('id', @linkend))][exists(osgi:external-target(@linkend))]">
   <xsl:variable name="target" select="osgi:external-target(@linkend)"/>
+  <xsl:variable name="version" select="osgi:external-version(@endterm)"/>
   <xsl:call-template name="osgi.external.link">
-    <xsl:with-param name="content" select="osgi:external-text($target, @linkend)"/>
+    <xsl:with-param name="content"
+                    select="if (exists($version)) then concat('Version ', $version)
+                            else osgi:external-text($target, @linkend)"/>
   </xsl:call-template>
 </xsl:template>
 

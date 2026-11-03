@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A link index in which the package has no version, as an index made without the versions parameter -->
+<index xmlns="urn:org.osgi:docbook:links">
+  <book path="osgi.core/8.0.0/">
+    <target id="framework.api" file="framework.api.html" title="Framework API" label="10"/>
+    <package name="org.osgi.resource" file="framework.api.html"/>
+  </book>
+</index>

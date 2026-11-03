@@ -19,14 +19,26 @@
   is the location of the book under the external link base URL and uri is the
   book.xml of that release. Earlier books take precedence for ids that appear
   in more than one book.
+
+  The optional versions parameter gives the version of the API packages of each
+  book, as path=uri pairs like the books, where uri is a text file with a line
+  package=version for each package, e.g. org.osgi.resource=1.0.1, as
+  package-versions.py writes it for the checkout of a release. The version is
+  that of the @Version annotation of the package in that release. It is
+  recorded for the packages that are in the file, as the major and minor
+  version, which is what the published chapter shows (Version 1.0 for 1.0.1).
+  The books are separate because a checkout holds the packages of every book,
+  in the state of its own release.
 -->
 <xsl:stylesheet
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:d="http://docbook.org/ns/docbook"
   xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+  xmlns:osgi="urn:org.osgi:docbook"
   xmlns="urn:org.osgi:docbook:links"
-  exclude-result-prefixes="xs d xi"
+  exclude-result-prefixes="xs d xi map osgi"
   version="3.0">
 
 <!-- Line breaks are written explicitly: Saxon-HE indents by 3 and wraps
@@ -34,6 +46,21 @@
 <xsl:output method="xml" indent="no" encoding="UTF-8"/>
 
 <xsl:param name="books" as="xs:string" required="yes"/>
+<xsl:param name="versions" as="xs:string" select="''"/>
+
+<!-- The versions of the packages of the book at a path, by package name -->
+<xsl:function name="osgi:versions" as="map(xs:string, xs:string)">
+  <xsl:param name="path" as="xs:string"/>
+  <xsl:variable name="uri" as="xs:string?"
+                select="(for $pair in tokenize(normalize-space($versions), ' ')
+                         return if (substring-before($pair, '=') = $path) then substring-after($pair, '=')
+                                else ())[1]"/>
+  <xsl:sequence select="if (empty($uri)) then map {}
+                        else map:merge(for $line in tokenize(unparsed-text($uri), '\r?\n')[contains(., '=')]
+                                       return map:entry(normalize-space(substring-before($line, '=')),
+                                                        normalize-space(substring-after($line, '='))),
+                                       map {'duplicates': 'use-last'})"/>
+</xsl:function>
 
 <xsl:template name="xsl:initial-template">
   <xsl:comment>
@@ -53,6 +80,7 @@
     <xsl:for-each select="tokenize(normalize-space($books), ' ')">
       <xsl:variable name="path" select="substring-before(., '=')"/>
       <xsl:variable name="book" select="doc(substring-after(., '='))"/>
+      <xsl:variable name="book.versions" select="osgi:versions($path)"/>
       <xsl:text>&#10;  </xsl:text>
       <book path="{$path}">
         <!-- Prefaces are named by dbhtml PIs, so only these chunks are linked -->
@@ -61,6 +89,7 @@
           <xsl:if test="$chunk/@xml:id">
             <xsl:call-template name="chunk">
               <xsl:with-param name="chunk" select="$chunk"/>
+              <xsl:with-param name="package.versions" select="$book.versions"/>
             </xsl:call-template>
           </xsl:if>
         </xsl:for-each>
@@ -74,6 +103,7 @@
 
 <xsl:template name="chunk">
   <xsl:param name="chunk" as="element()"/>
+  <xsl:param name="package.versions" as="map(xs:string, xs:string)"/>
   <xsl:variable name="file" select="concat($chunk/@xml:id, '.html')"/>
   <xsl:for-each select="$chunk/descendant-or-self::*[@xml:id][d:title | d:info/d:title]">
     <xsl:text>&#10;    </xsl:text>
@@ -93,7 +123,12 @@
     <xsl:variable name="name" select="replace(tokenize(@href, '/')[last()], '\.xml$', '')"/>
     <xsl:if test="not(ends-with($name, '-ddf'))">
       <xsl:text>&#10;    </xsl:text>
-      <package name="{$name}" file="{$file}"/>
+      <package name="{$name}" file="{$file}">
+        <xsl:if test="map:contains($package.versions, $name)">
+          <xsl:attribute name="version"
+                         select="string-join(tokenize($package.versions($name), '\.')[position() le 2], '.')"/>
+        </xsl:if>
+      </package>
     </xsl:if>
   </xsl:for-each>
 </xsl:template>
