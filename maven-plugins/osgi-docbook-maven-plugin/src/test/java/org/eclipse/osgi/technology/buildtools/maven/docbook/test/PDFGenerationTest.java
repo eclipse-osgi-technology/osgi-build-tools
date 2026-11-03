@@ -137,19 +137,32 @@ class PDFGenerationTest {
     @Test
     @InjectMojo(goal = "pdf")
     @Basedir("/test-projects/simple")
+    public void testReleaseInfoShowsVersionFromBundledIndex(OsgiSpecPdfMojo mojo) throws Exception {
+        // org.osgi.resource is Version 1.0 in Core Release 8, as in its published chapter
+        assertEquals("Version 1.0", releaseInfoText(mojo, null));
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
     public void testReleaseInfoWithoutVersionOfOtherSpecification(OsgiSpecPdfMojo mojo) throws Exception {
         // an index without the version gives the name of the package, not ???
         assertEquals("org.osgi.resource", releaseInfoText(mojo, "/links/index-without-version.xml"));
     }
 
-    /** @return the text of the links to org.osgi.resource, which must all be the same */
+    /**
+     * @param index the index to use, or null for the bundled one
+     * @return the text of the links to org.osgi.resource, which must all be the same
+     */
     private static String releaseInfoText(OsgiSpecPdfMojo mojo, String index) throws Exception {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
         MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-releaseinfo.xml");
-        MojoExtension.setVariableValueToObject(mojo, "externalLinkIndex",
-                Path.of(PDFGenerationTest.class.getResource(index).toURI()).toFile());
+        if (index != null) {
+            MojoExtension.setVariableValueToObject(mojo, "externalLinkIndex",
+                    Path.of(PDFGenerationTest.class.getResource(index).toURI()).toFile());
+        }
         mojo.execute();
 
         Object links = MojoExtension.getVariableValueFromObject(mojo, "links");
