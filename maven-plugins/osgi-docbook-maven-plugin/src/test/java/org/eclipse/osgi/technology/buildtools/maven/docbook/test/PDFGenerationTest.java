@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.maven.api.plugin.testing.Basedir;
@@ -103,13 +104,72 @@ class PDFGenerationTest {
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
         MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-links.xml");
-        // a chapter links to other specifications: warnings, not a failure
+        // a chapter links to other specifications: they are published, so
+        // only the id that is in no specification is reported
+        mojo.execute();
+
+        Object links = MojoExtension.getVariableValueFromObject(mojo, "links");
+        Map<String, Set<String>> ids = MojoExtension.getVariableValueFromObject(links, "links");
+        assertEquals(Set.of("no.such.id"), ids.keySet());
+        assertEquals(Set.of("125.1"), ids.get("no.such.id"));
+        assertEquals("pdf", project.getAttachedArtifacts().get(1).getType());
+
+        // the references go to the published specifications, as in the HTML
+        String fo = Files.readString(project.getAttachedArtifacts().get(0).getFile().toPath());
+        assertTrue(fo.contains("external-destination=\"url(https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.cm.html)\""),
+                "Chapter reference not linked externally");
+        assertTrue(fo.contains("external-destination=\"url(https://docs.osgi.org/specification/osgi.cmpn/8.1.0/service.namespaces.html#service.namespaces-osgi.service.namespace)\""),
+                "Section link not linked externally");
+        assertTrue(fo.matches("(?s).*font-style=\"italic\">[^<]*Configuration Admin[^<]*</fo:inline>.*"),
+                "Chapter title missing or not italic");
+        // only the reference to the id that is in no specification is unresolved
+        assertEquals(1, fo.split("\\?\\?\\?", -1).length - 1, "Unresolved references");
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
+    public void testReleaseInfoLinksToOtherSpecification(OsgiSpecPdfMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-releaseinfo.xml");
+        mojo.execute();
+
+        Object links = MojoExtension.getVariableValueFromObject(mojo, "links");
+        Map<String, Set<String>> ids = MojoExtension.getVariableValueFromObject(links, "links");
+        assertEquals(Set.of(), ids.keySet());
+        String fo = Files.readString(project.getAttachedArtifacts().get(0).getFile().toPath());
+        // the release info of a chapter is the line under its title, and in every page header
+        assertFalse(fo.contains("???"), "Unresolved reference in the release info");
+        Matcher m = Pattern.compile("(?s)<fo:basic-link external-destination=\"url\\(([^)]*)\\)\"[^>]*>(.*?)</fo:basic-link>")
+                .matcher(fo);
+        int linked = 0;
+        while (m.find()) {
+            if (m.group(1).equals("https://docs.osgi.org/specification/osgi.core/8.0.0/framework.api.html#org.osgi.resource")) {
+                // the index has no version text, so it is the name of the package
+                assertEquals("org.osgi.resource", m.group(2).replaceAll("<[^>]*>", "").strip());
+                linked++;
+            }
+        }
+        assertTrue(linked > 0, "Release info not linked");
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
+    public void testLinksToOtherSpecificationsAsText(OsgiSpecPdfMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "chapterSource", "src/main/resources/spec/spec-links.xml");
+        MojoExtension.setVariableValueToObject(mojo, "externalLinks", false);
         mojo.execute();
 
         Object links = MojoExtension.getVariableValueFromObject(mojo, "links");
         Map<String, Set<String>> ids = MojoExtension.getVariableValueFromObject(links, "links");
         assertEquals(Set.of("service.cm", "service.namespaces-osgi.service.namespace", "no.such.id"), ids.keySet());
-        assertEquals(Set.of("125.1"), ids.get("service.namespaces-osgi.service.namespace"));
-        assertEquals("pdf", project.getAttachedArtifacts().get(1).getType());
+        String fo = Files.readString(project.getAttachedArtifacts().get(0).getFile().toPath());
+        assertFalse(fo.contains("docs.osgi.org/specification/osgi.cmpn"), "Linked externally");
     }
 }

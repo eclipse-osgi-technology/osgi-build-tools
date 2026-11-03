@@ -57,9 +57,6 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     private static final String INTERNAL_HTML = "internal:/html";
     private static final String INTERNAL_HTML_IMAGES = "internal:/html-images";
 
-    /** The bundled index of chapters and packages published on docs.osgi.org */
-    private static final String LINK_INDEX = "../links/osgi-spec-index.xml";
-
     /** The static files that every page references, relative to /docbook/xsl/html-resources/ */
     private static final List<String> STATIC_RESOURCES = List.of(
             "css/custom.css", "css/github.css",
@@ -177,11 +174,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             imageParameters(transformer);
             transformer.setParameter("draft.mode", draftMode);
             transformer.setParameter("chunker.output.encoding", "UTF-8");
-            if (externalLinks) {
-                transformer.setParameter("external.links.index", externalLinkIndex != null
-                        ? externalLinkIndex.toPath().toAbsolutePath().toUri().toString() : LINK_INDEX);
-                transformer.setParameter("external.links.base", externalLinkBaseUrl);
-            }
+            externalLinks(transformer, externalLinks, externalLinkIndex, externalLinkBaseUrl);
 
             StreamResult result = new StreamResult(mainOutput.toFile());
             result.setSystemId(mainOutput.toUri().toString());

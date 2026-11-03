@@ -20,10 +20,14 @@ parent::d:tasksummary|parent::d:warning|parent::d:topic">
   xmlns:fo="http://www.w3.org/1999/XSL/Format"
   xmlns:xlink='http://www.w3.org/1999/xlink'
   xmlns:axf="http://www.antennahouse.com/names/XSL/Extensions"
-  exclude-result-prefixes="exsl axf"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:osgi="urn:org.osgi:docbook"
+  exclude-result-prefixes="exsl axf xs osgi"
   version="1.0">
 
 <xsl:import href="../docbook-xsl/fo/docbook.xsl"/>
+<!-- The lookup of the published targets of links to other specifications -->
+<xsl:import href="custom-links.xsl"/>
 
 <xsl:output indent="yes"/>
 
@@ -1229,7 +1233,8 @@ actual para elements -->
     <xsl:variable name="target" select="$targets[1]"/>
 
     <xsl:if test="count($targets)=0">
-      <xsl:if test="count(ancestor::d:section[@role = 'package'])=0">
+      <xsl:if test="count(ancestor::d:section[@role = 'package'])=0
+                    and not(osgi:external-target($linkend))">
         <xsl:message>
           <xsl:text>[</xsl:text>
           <xsl:apply-templates select="ancestor::d:section[1]" mode="label.markup"/>
@@ -1357,15 +1362,25 @@ actual para elements -->
 
       <xsl:choose>
         <xsl:when test="count($target) = 0">
-          <xsl:if test="count(ancestor::d:section[@role = 'package'])=0">
-            <xsl:message>
-              <xsl:text>[</xsl:text>
-              <xsl:apply-templates select="ancestor::d:section[1]" mode="label.markup"/>
-              <xsl:text>] XLink to nonexistent id: </xsl:text>
-              <xsl:value-of select="$linkend"/>
-            </xsl:message>
-          </xsl:if>
-          <xsl:copy-of select="$content"/>
+          <xsl:choose>
+            <xsl:when test="exists(osgi:external-target($linkend))">
+              <xsl:call-template name="osgi.external.link">
+                <xsl:with-param name="linkend" select="$linkend"/>
+                <xsl:with-param name="content" select="$content"/>
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:if test="count(ancestor::d:section[@role = 'package'])=0">
+                <xsl:message>
+                  <xsl:text>[</xsl:text>
+                  <xsl:apply-templates select="ancestor::d:section[1]" mode="label.markup"/>
+                  <xsl:text>] XLink to nonexistent id: </xsl:text>
+                  <xsl:value-of select="$linkend"/>
+                </xsl:message>
+              </xsl:if>
+              <xsl:copy-of select="$content"/>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
 
         <xsl:otherwise>
@@ -1479,6 +1494,49 @@ actual para elements -->
       </xsl:message>
     </xsl:if>
   </xsl:if>
+</xsl:template>
+
+<!--
+  A link to a chapter, section or package of another specification, which is
+  not in this book, goes to the published specification. The id is not in the
+  book, so this does not apply to a complete book.
+-->
+<xsl:template name="osgi.external.link">
+  <xsl:param name="linkend" select="@linkend"/>
+  <xsl:param name="content"/>
+  <xsl:variable name="target" select="osgi:external-target($linkend)"/>
+  <xsl:choose>
+    <xsl:when test="exists($target)">
+      <fo:basic-link external-destination="url({osgi:external-href($target, $linkend)})">
+        <xsl:apply-templates select="." mode="simple.xlink.properties"/>
+        <xsl:copy-of select="$content"/>
+      </fo:basic-link>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:copy-of select="$content"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<!-- Without this DocBook renders an xref to an id outside the book as ??? -->
+<xsl:template match="d:xref[@linkend][empty(key('id', @linkend))][exists(osgi:external-target(@linkend))]">
+  <xsl:variable name="target" select="osgi:external-target(@linkend)"/>
+  <xsl:variable name="label" select="osgi:external-label($target, @linkend)"/>
+  <xsl:call-template name="osgi.external.link">
+    <xsl:with-param name="content">
+      <fo:inline xsl:use-attribute-sets="xref.properties">
+        <xsl:choose>
+          <!-- As for a section, the title of a chapter is italic in a cross reference -->
+          <xsl:when test="osgi:is-chunk($target)">
+            <fo:inline font-style="italic"><xsl:value-of select="$label"/></fo:inline>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="$label"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </fo:inline>
+    </xsl:with-param>
+  </xsl:call-template>
 </xsl:template>
 
 <!-- make xrefs to section titles italic -->
