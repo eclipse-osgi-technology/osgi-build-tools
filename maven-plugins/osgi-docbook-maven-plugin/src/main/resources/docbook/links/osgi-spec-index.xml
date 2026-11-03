@@ -48,7 +48,7 @@
     <target id="i1270819" file="service.device.html" title="USB Specification"/>
     <target id="i1271836" file="service.device.html" title="Universal Plug and Play"/>
     <target id="i1271860" file="service.device.html" title="Jini, Service Discovery and Usage"/>
-    <package name="org.osgi.service.device" file="service.device.html"/>
+    <package name="org.osgi.service.device" file="service.device.html" version="1.1"/>
     <target id="service.cm" file="service.cm.html" title="Configuration Admin Service Specification" label="104"/>
     <target id="i1817860" file="service.cm.html" title="Overall Service Diagram"/>
     <target id="i1358725" file="service.cm.html" title="Configuration Targets" label="104.2"/>
@@ -81,8 +81,8 @@
     <target id="service.cm-coordinatorsupport" file="service.cm.html" title="Coordinator Support" label="104.11"/>
     <target id="service.cm-capabilities" file="service.cm.html" title="Capabilities" label="104.12"/>
     <target id="i1693439" file="service.cm.html" title="Configuration Permission" label="104.13.1"/>
-    <package name="org.osgi.service.cm" file="service.cm.html"/>
-    <package name="org.osgi.service.cm.annotations" file="service.cm.html"/>
+    <package name="org.osgi.service.cm" file="service.cm.html" version="1.6"/>
+    <package name="org.osgi.service.cm.annotations" file="service.cm.html" version="1.6"/>
     <target id="service.metatype" file="service.metatype.html" title="Metatype Service Specification" label="105"/>
     <target id="i1504332" file="service.metatype.html" title="Entities" label="105.1.2"/>
     <target id="i1504333" file="service.metatype.html" title="Attribute Definition" label="105.4"/>
@@ -101,19 +101,19 @@
     <target id="i1215866" file="service.metatype.html" title="LDAP."/>
     <target id="i1215870" file="service.metatype.html" title="Understanding and Deploying LDAP Directory services"/>
     <target id="service.metatype-jls.ref" file="service.metatype.html" title="The Java Language Specification, Java SE 8 Edition"/>
-    <package name="org.osgi.service.metatype" file="service.metatype.html"/>
-    <package name="org.osgi.service.metatype.annotations" file="service.metatype.html"/>
+    <package name="org.osgi.service.metatype" file="service.metatype.html" version="1.4"/>
+    <package name="org.osgi.service.metatype.annotations" file="service.metatype.html" version="1.4"/>
     <target id="service.prefs" file="service.prefs.html" title="PreferencesService Specification" label="106"/>
     <target id="i1423659" file="service.prefs.html" title="Preferences Class Diagram"/>
     <target id="i1423660" file="service.prefs.html" title="Cleanup" label="106.5"/>
     <target id="i1227403" file="service.prefs.html" title="JSR 10 Preferences API"/>
     <target id="i1219521" file="service.prefs.html" title="RFC 2045 Base 64 encoding"/>
-    <package name="org.osgi.service.prefs" file="service.prefs.html"/>
+    <package name="org.osgi.service.prefs" file="service.prefs.html" version="1.1"/>
     <target id="service.useradmin" file="service.useradmin.html" title="User Admin Service Specification" label="107"/>
     <target id="i1529238" file="service.useradmin.html" title="User Admin Events" label="107.5"/>
     <target id="i1307817" file="service.useradmin.html" title="The Java Security Architecture for JDK 1.2"/>
     <target id="i1307810" file="service.useradmin.html" title="Java Authentication and Authorization Service"/>
-    <package name="org.osgi.service.useradmin" file="service.useradmin.html"/>
+    <package name="org.osgi.service.useradmin" file="service.useradmin.html" version="1.1"/>
     <target id="service.wireadmin" file="service.wireadmin.html" title="Wire Admin Service Specification" label="108"/>
     <target id="i1276764" file="service.wireadmin.html" title="An Example Wiring Scheme in an OSGi Environment"/>
     <target id="service.wireadmin-standard.wire.properties" file="service.wireadmin.html" title="Standard Wire Properties"/>
@@ -132,7 +132,7 @@
     <target id="i1287360" file="service.wireadmin.html" title="Security" label="108.14"/>
     <target id="service.wireadmin.references" file="service.wireadmin.html" title="References" label="108.15"/>
     <target id="i1417158" file="service.wireadmin.html" title="Design Patterns"/>
-    <package name="org.osgi.service.wireadmin" file="service.wireadmin.html"/>
+    <package name="org.osgi.service.wireadmin" file="service.wireadmin.html" version="1.0"/>
     <target id="service.upnp" file="service.upnp.html" title="Device Service Specification for UPnP™ Technology" label="111"/>
     <target id="i1527768" file="service.upnp.html" title="Entities" label="111.1.2"/>
     <target id="i1264660" file="service.upnp.html" title="UPnP device hierarchy"/>
@@ -144,7 +144,7 @@
     <target id="i1586441" file="service.upnp.html" title="Open Connectivity Foundation"/>
     <target id="i1325817" file="service.upnp.html" title="XML Schema"/>
     <target id="i1325829" file="service.upnp.html" title="ISO 8601 Date And Time formats"/>
-    <package name="org.osgi.service.upnp" file="service.upnp.html"/>
+    <package name="org.osgi.service.upnp" file="service.upnp.html" version="1.2"/>
     <target id="service.component" file="service.component.html" title="Declarative Services Specification" label="112"/>
     <target id="service.component-components" file="service.component.html" title="Components" label="112.2"/>
     <target id="service.component-factorycomponent" file="service.component.html" title="Factory Component" label="112.2.4"/>
@@ -219,11 +219,11 @@
     <target id="i1655737" file="service.component.html" title="OSGi XML Schemas"/>
     <target id="service.component-jvms.ref" file="service.component.html" title="The Java Virtual Machine Specification, Java SE 8 Edition"/>
     <target id="service.component-jls.ref" file="service.component.html" title="The Java Language Specification, Java SE 8 Edition"/>
-    <package name="org.osgi.service.component" file="service.component.html"/>
-    <package name="org.osgi.service.component.annotations" file="service.component.html"/>
-    <package name="org.osgi.service.component.runtime" file="service.component.html"/>
-    <package name="org.osgi.service.component.runtime.dto" file="service.component.html"/>
-    <package name="org.osgi.service.component.propertytypes" file="service.component.html"/>
+    <package name="org.osgi.service.component" file="service.component.html" version="1.5"/>
+    <package name="org.osgi.service.component.annotations" file="service.component.html" version="1.5"/>
+    <package name="org.osgi.service.component.runtime" file="service.component.html" version="1.5"/>
+    <package name="org.osgi.service.component.runtime.dto" file="service.component.html" version="1.5"/>
+    <package name="org.osgi.service.component.propertytypes" file="service.component.html" version="1.5"/>
     <target id="service.event" file="service.event.html" title="Event Admin Service Specification" label="113"/>
     <target id="i1487590" file="service.event.html" title="Event Admin Architecture" label="113.2"/>
     <target id="i1450302" file="service.event.html" title="Channel Pattern"/>
@@ -232,9 +232,9 @@
     <target id="i1399436" file="service.event.html" title="Event Publisher" label="113.5"/>
     <target id="service.event.serviceevent" file="service.event.html" title="Service Event" label="113.6.5"/>
     <target id="service.event-capabilities" file="service.event.html" title="Capabilities" label="113.10"/>
-    <package name="org.osgi.service.event" file="service.event.html"/>
-    <package name="org.osgi.service.event.annotations" file="service.event.html"/>
-    <package name="org.osgi.service.event.propertytypes" file="service.event.html"/>
+    <package name="org.osgi.service.event" file="service.event.html" version="1.4"/>
+    <package name="org.osgi.service.event.annotations" file="service.event.html" version="1.4"/>
+    <package name="org.osgi.service.event.propertytypes" file="service.event.html" version="1.4"/>
     <target id="service.dmt" file="service.dmt.html" title="Dmt Admin Service Specification" label="117"/>
     <target id="i2818213" file="service.dmt.html" title="Overall Service Diagram"/>
     <target id="i2421961" file="service.dmt.html" title="Using Dmt Admin service, org.osgi.service.dmt and org.osgi.service.dmt.notification.* packages"/>
@@ -306,11 +306,11 @@
     <target id="i1869214" file="service.dmt.html" title="Secure Hash Algorithm 1"/>
     <target id="i2409502" file="service.dmt.html" title="TR-069 CPE WAN Management Protocol (CWMP)"/>
     <target id="i2437549" file="service.dmt.html" title="XML Schema Part 2: Datatypes Second Edition"/>
-    <package name="org.osgi.service.dmt" file="service.dmt.html"/>
-    <package name="org.osgi.service.dmt.spi" file="service.dmt.html"/>
-    <package name="org.osgi.service.dmt.notification" file="service.dmt.html"/>
-    <package name="org.osgi.service.dmt.notification.spi" file="service.dmt.html"/>
-    <package name="org.osgi.service.dmt.security" file="service.dmt.html"/>
+    <package name="org.osgi.service.dmt" file="service.dmt.html" version="2.0"/>
+    <package name="org.osgi.service.dmt.spi" file="service.dmt.html" version="2.0"/>
+    <package name="org.osgi.service.dmt.notification" file="service.dmt.html" version="2.0"/>
+    <package name="org.osgi.service.dmt.notification.spi" file="service.dmt.html" version="2.0"/>
+    <package name="org.osgi.service.dmt.security" file="service.dmt.html" version="2.0"/>
     <target id="service.remoteserviceadmin" file="service.remoteserviceadmin.html" title="Remote Service Admin Service Specification" label="122"/>
     <target id="i1706087" file="service.remoteserviceadmin.html" title="Remote Service Admin Entities"/>
     <target id="i1817848" file="service.remoteserviceadmin.html" title="Roles"/>
@@ -341,8 +341,8 @@
     <target id="i1789952" file="service.remoteserviceadmin.html" title="JGroups"/>
     <target id="i1789020" file="service.remoteserviceadmin.html" title="UDDI"/>
     <target id="i1789031" file="service.remoteserviceadmin.html" title="Service Component Architecture (SCA)"/>
-    <package name="org.osgi.service.remoteserviceadmin" file="service.remoteserviceadmin.html"/>
-    <package name="org.osgi.service.remoteserviceadmin.namespace" file="service.remoteserviceadmin.html"/>
+    <package name="org.osgi.service.remoteserviceadmin" file="service.remoteserviceadmin.html" version="1.1"/>
+    <package name="org.osgi.service.remoteserviceadmin.namespace" file="service.remoteserviceadmin.html" version="1.0"/>
     <target id="service.jta" file="service.jta.html" title="JTA Transaction Services Specification" label="123"/>
     <target id="i3096101" file="service.jta.html" title="Global and Local Transactions" label="123.2.1"/>
     <target id="i3115044" file="service.jta.html" title="Data Source Proxy"/>
@@ -350,7 +350,7 @@
     <target id="i3068810" file="service.jta.html" title="XA+ Specification"/>
     <target id="i3073418" file="service.jta.html" title="Java Platform, Enterprise Edition (Java EE) Specification, v5"/>
     <target id="service.jdbc" file="service.jdbc.html" title="Data Service Specification for JDBC™ Technology" label="125"/>
-    <package name="org.osgi.service.jdbc" file="service.jdbc.html"/>
+    <package name="org.osgi.service.jdbc" file="service.jdbc.html" version="1.1"/>
     <target id="service.jndi" file="service.jndi.html" title="JNDI Services Specification" label="126"/>
     <target id="i3095960" file="service.jndi.html" title="JNDI Overview" label="126.2"/>
     <target id="i3118331" file="service.jndi.html" title="Backing Context"/>
@@ -371,7 +371,7 @@
     <target id="i3079918" file="service.jndi.html" title="Life Cycle Mismatch" label="126.7.4"/>
     <target id="i3131859" file="service.jndi.html" title="Java Naming and Directory Interface"/>
     <target id="i3109941" file="service.jndi.html" title="JNDI Standard Property Names"/>
-    <package name="org.osgi.service.jndi" file="service.jndi.html"/>
+    <package name="org.osgi.service.jndi" file="service.jndi.html" version="1.0"/>
     <target id="service.jpa" file="service.jpa.html" title="JPA Service Specification" label="127"/>
     <target id="i3113425" file="service.jpa.html" title="Dependencies" label="127.1.3"/>
     <target id="i3105110" file="service.jpa.html" title="JPA Client View"/>
@@ -396,8 +396,8 @@
     <target id="i3075842.1" file="service.jpa.html" title="JPA 2.1"/>
     <target id="i3091015" file="service.jpa.html" title="Java EE 5"/>
     <target id="service.jpa-portable.java.contracts.ref" file="service.jpa.html" title="Portable Java Contract Definitions"/>
-    <package name="org.osgi.service.jpa" file="service.jpa.html"/>
-    <package name="org.osgi.service.jpa.annotations" file="service.jpa.html"/>
+    <package name="org.osgi.service.jpa" file="service.jpa.html" version="1.1"/>
+    <package name="org.osgi.service.jpa.annotations" file="service.jpa.html" version="1.1"/>
     <target id="service.war" file="service.war.html" title="Web Applications Specification" label="128"/>
     <target id="i3084702" file="service.war.html" title="Web Container Entities"/>
     <target id="i3100968" file="service.war.html" title="Dependencies" label="128.1.3"/>
@@ -429,7 +429,7 @@
     <target id="i3142795" file="service.coordinator.html" title="Failing, TIMEOUT, ORPHANED, and RELEASED" label="130.3.7"/>
     <target id="i3202535" file="service.coordinator.html" title="Nesting Implicit Coordinations" label="130.3.8"/>
     <target id="service.coordinator.security" file="service.coordinator.html" title="Security" label="130.4"/>
-    <package name="org.osgi.service.coordinator" file="service.coordinator.html"/>
+    <package name="org.osgi.service.coordinator" file="service.coordinator.html" version="1.0"/>
     <target id="service.tr069todmt" file="service.tr069todmt.html" title="TR069 Connector Service Specification" label="131"/>
     <target id="i742559" file="service.tr069todmt.html" title="TR-069 Entities"/>
     <target id="i753210" file="service.tr069todmt.html" title="TR-069 Reference Architecture"/>
@@ -458,7 +458,7 @@
     <target id="i741562" file="service.tr069todmt.html" title="SOAP 1.1"/>
     <target id="i747814" file="service.tr069todmt.html" title="Extensible Markup Language (XML) 1.0 (Second Edition)"/>
     <target id="i799974" file="service.tr069todmt.html" title="Broadband Forum"/>
-    <package name="org.osgi.service.tr069todmt" file="service.tr069todmt.html"/>
+    <package name="org.osgi.service.tr069todmt" file="service.tr069todmt.html" version="1.0"/>
     <target id="service.repository" file="service.repository.html" title="Repository Service Specification" label="132"/>
     <target id="i3222899" file="service.repository.html" title="Repository" label="132.3"/>
     <target id="i3224355" file="service.repository.html" title="Repository Content" label="132.3.1"/>
@@ -478,7 +478,7 @@
     <target id="i3273347" file="service.repository.html" title="XML Schema Part 2: Data types Second Edition"/>
     <target id="service.repository-resolving.relative.uris" file="service.repository.html" title="XML Base (Second Edition), Resolving Relative URIs"/>
     <target id="service.repository-ref.service.resolver" file="service.repository.html" title="Resolver Service Specification"/>
-    <package name="org.osgi.service.repository" file="service.repository.html"/>
+    <package name="org.osgi.service.repository" file="service.repository.html" version="1.1"/>
     <target id="service.loader" file="service.loader.html" title="Service Loader Mediator Specification" label="133"/>
     <target id="i3285425" file="service.loader.html" title="Java Service Loader API" label="133.2"/>
     <target id="i3252894" file="service.loader.html" title="Consumer Example" label="133.3.5"/>
@@ -487,7 +487,7 @@
     <target id="i3283346" file="service.loader.html" title="Cardinality Service Type"/>
     <target id="i3280141" file="service.loader.html" title="osgi.serviceloader Namespace" label="133.6"/>
     <target id="i3255894" file="service.loader.html" title="Java Service Loader API"/>
-    <package name="org.osgi.service.serviceloader" file="service.loader.html"/>
+    <package name="org.osgi.service.serviceloader" file="service.loader.html" version="1.0"/>
     <target id="service.namespaces" file="service.namespaces.html" title="Common Namespaces Specification" label="135"/>
     <target id="service.namespaces-osgi.extender.namespace" file="service.namespaces.html" title="osgi.extender Namespace" label="135.2"/>
     <target id="service.namespaces-osgi.contract.namespace" file="service.namespaces.html" title="osgi.contract Namespace" label="135.3"/>
@@ -501,11 +501,11 @@
     <target id="i1777866" file="service.namespaces.html" title="General Syntax Definitions"/>
     <target id="i1777884" file="service.namespaces.html" title="Common Headers"/>
     <target id="service.namespaces-coresemver" file="service.namespaces.html" title="Semantic Versioning"/>
-    <package name="org.osgi.namespace.contract" file="service.namespaces.html"/>
-    <package name="org.osgi.namespace.extender" file="service.namespaces.html"/>
-    <package name="org.osgi.namespace.service" file="service.namespaces.html"/>
-    <package name="org.osgi.namespace.implementation" file="service.namespaces.html"/>
-    <package name="org.osgi.namespace.unresolvable" file="service.namespaces.html"/>
+    <package name="org.osgi.namespace.contract" file="service.namespaces.html" version="1.0"/>
+    <package name="org.osgi.namespace.extender" file="service.namespaces.html" version="1.0"/>
+    <package name="org.osgi.namespace.service" file="service.namespaces.html" version="1.0"/>
+    <package name="org.osgi.namespace.implementation" file="service.namespaces.html" version="1.0"/>
+    <package name="org.osgi.namespace.unresolvable" file="service.namespaces.html" version="1.0"/>
     <target id="service.rest" file="service.rest.html" title="REST Management Service Specification" label="137"/>
     <target id="service.rest-resource.identifiers" file="service.rest.html" title="Resource Identifier Overview" label="137.2.1"/>
     <target id="service.rest-resource.filters" file="service.rest.html" title="Filtering Results" label="137.2.2"/>
@@ -530,15 +530,15 @@
     <target id="service.rest-webidl" file="service.rest.html" title="Web IDL"/>
     <target id="service.rest-reference.xml.schemas" file="service.rest.html" title="OSGi XML Schemas"/>
     <target id="service.rest-whiteboard.pattern.ref" file="service.rest.html" title="Whiteboard Pattern"/>
-    <package name="org.osgi.service.rest" file="service.rest.html"/>
-    <package name="org.osgi.service.rest.client" file="service.rest.html"/>
+    <package name="org.osgi.service.rest" file="service.rest.html" version="1.0"/>
+    <package name="org.osgi.service.rest.client" file="service.rest.html" version="1.0"/>
     <target id="service.async" file="service.async.html" title="Asynchronous Service Specification" label="138"/>
     <target id="service.async-main.body" file="service.async.html" title="Async Service" label="138.3"/>
     <target id="service.async-main.failures" file="service.async.html" title="Asynchronous Failures" label="138.3.2"/>
     <target id="service.async-capabilities" file="service.async.html" title="Capabilities" label="138.7"/>
     <target id="service.async-security" file="service.async.html" title="Security" label="138.8"/>
-    <package name="org.osgi.service.async" file="service.async.html"/>
-    <package name="org.osgi.service.async.delegate" file="service.async.html"/>
+    <package name="org.osgi.service.async" file="service.async.html" version="1.0"/>
+    <package name="org.osgi.service.async.delegate" file="service.async.html" version="1.0"/>
     <target id="service.enocean" file="service.enocean.html" title="Device Service Specification for EnOcean™ Technology" label="139"/>
     <target id="service.enocean-figure_id_20140603_11h12_46" file="service.enocean.html" title="EnOcean Service Specification class diagram."/>
     <target id="service.enocean-figure_id_20140603_11h32_54" file="service.enocean.html" title="EnOcean device import."/>
@@ -555,8 +555,8 @@
     <target id="service.enocean-bibliomixed_id_20140602_17h03_46_9" file="service.enocean.html" title="EnOcean System Specification - Security of EnOcean Radio Networks v1.9"/>
     <target id="service.enocean-bibliomixed_id_20150105_16h26_16_99" file="service.enocean.html" title="EnOcean Remote Commissioning Summary v1.0"/>
     <target id="service.enocean-reference.service.pid" file="service.enocean.html" title="Persistent Identifier (PID)"/>
-    <package name="org.osgi.service.enocean" file="service.enocean.html"/>
-    <package name="org.osgi.service.enocean.descriptions" file="service.enocean.html"/>
+    <package name="org.osgi.service.enocean" file="service.enocean.html" version="1.0"/>
+    <package name="org.osgi.service.enocean.descriptions" file="service.enocean.html" version="1.0"/>
     <target id="service.servlet" file="service.servlet.html" title="Whiteboard Specification for Jakarta™ Servlet" label="140"/>
     <target id="service.http.whiteboard.servletcontext" file="service.servlet.html" title="The Servlet Context" label="140.2"/>
     <target id="service.http.whiteboard.servletcontext.helper.properties" file="service.servlet.html" title="Service registration properties for ServletContextHelper services."/>
@@ -578,12 +578,12 @@
     <target id="service.servlet-service.hook.ref" file="service.servlet.html" title="Core Service Hooks"/>
     <target id="service.servlet-http.whiteboard.ref" file="service.servlet.html" title="Http Whiteboard Specification"/>
     <target id="service.servlet-http.ref" file="service.servlet.html" title="Http Service Specification"/>
-    <package name="org.osgi.service.servlet.context" file="service.servlet.html"/>
-    <package name="org.osgi.service.servlet.runtime" file="service.servlet.html"/>
-    <package name="org.osgi.service.servlet.runtime.dto" file="service.servlet.html"/>
-    <package name="org.osgi.service.servlet.whiteboard" file="service.servlet.html"/>
-    <package name="org.osgi.service.servlet.whiteboard.annotations" file="service.servlet.html"/>
-    <package name="org.osgi.service.servlet.whiteboard.propertytypes" file="service.servlet.html"/>
+    <package name="org.osgi.service.servlet.context" file="service.servlet.html" version="2.0"/>
+    <package name="org.osgi.service.servlet.runtime" file="service.servlet.html" version="2.0"/>
+    <package name="org.osgi.service.servlet.runtime.dto" file="service.servlet.html" version="2.0"/>
+    <package name="org.osgi.service.servlet.whiteboard" file="service.servlet.html" version="2.0"/>
+    <package name="org.osgi.service.servlet.whiteboard.annotations" file="service.servlet.html" version="2.0"/>
+    <package name="org.osgi.service.servlet.whiteboard.propertytypes" file="service.servlet.html" version="2.0"/>
     <target id="service.dal" file="service.dal.html" title="Device Abstraction Layer Specification" label="141"/>
     <target id="service.dal-introduction" file="service.dal.html" title="Introduction" label="141.1"/>
     <target id="service.dal-device.access.category" file="service.dal.html" title="Device Category" label="141.2"/>
@@ -611,7 +611,7 @@
     <target id="service.dal-security" file="service.dal.html" title="Security" label="141.5"/>
     <target id="service.dal-references" file="service.dal.html" title="References" label="141.6"/>
     <target id="service.dal-ref.bean.spec" file="service.dal.html" title="JavaBeans Spec"/>
-    <package name="org.osgi.service.dal" file="service.dal.html"/>
+    <package name="org.osgi.service.dal" file="service.dal.html" version="1.0"/>
     <target id="service.dal.functions" file="service.dal.functions.html" title="Device Abstraction Layer Functions Specification" label="142"/>
     <target id="service.dal.functions-introduction" file="service.dal.functions.html" title="Introduction" label="142.1"/>
     <target id="service.dal.functions-list" file="service.dal.functions.html" title="Functions" label="142.2"/>
@@ -628,11 +628,11 @@
     <target id="service.dal.functions-data.level" file="service.dal.functions.html" title="LevelData" label="142.3.2"/>
     <target id="service.dal.functions-data.alarm" file="service.dal.functions.html" title="AlarmData" label="142.3.3"/>
     <target id="service.dal.functions-data.keypad" file="service.dal.functions.html" title="KeypadData" label="142.3.4"/>
-    <package name="org.osgi.service.dal.functions" file="service.dal.functions.html"/>
-    <package name="org.osgi.service.dal.functions.data" file="service.dal.functions.html"/>
+    <package name="org.osgi.service.dal.functions" file="service.dal.functions.html" version="1.0"/>
+    <package name="org.osgi.service.dal.functions.data" file="service.dal.functions.html" version="1.0"/>
     <target id="service.network" file="service.network.html" title="Network Interface Information Service Specification" label="143"/>
     <target id="service.network-figure-143-1" file="service.network.html" title="Network Interface Information Service Overview Diagram"/>
-    <package name="org.osgi.service.networkadapter" file="service.network.html"/>
+    <package name="org.osgi.service.networkadapter" file="service.network.html" version="1.0"/>
     <target id="service.resourcemonitoring" file="service.resourcemonitoring.html" title="Resource Monitoring Specification" label="144"/>
     <target id="service.resourcemonitoring_bibliomixed_id_20141210_15h18_rfc_fig_2" file="service.resourcemonitoring.html" title="Resource monitoring class diagram specification."/>
     <target id="service.resourcemonitoring_bibliomixed_id_20141211_16h06_rfc_fig_3" file="service.resourcemonitoring.html" title="Threshold state diagram."/>
@@ -640,28 +640,28 @@
     <target id="service.resourcemonitoring_bibliomixed_id_20141211_16h08_rfc_fig_5" file="service.resourcemonitoring.html" title="CPU consumption (%) over the time – Upper Threshold."/>
     <target id="service.resourcemonitoring_bibliomixed_id_20150105_11h45_1" file="service.resourcemonitoring.html" title="Adaptive Monitoring of End-user OSGi based Home Boxes"/>
     <target id="service.resourcemonitoring_bibliomixed_id_20150105_11h46_2" file="service.resourcemonitoring.html" title="Memory Monitoring in a Multi-tenant OSGi Execution Environment"/>
-    <package name="org.osgi.service.resourcemonitoring" file="service.resourcemonitoring.html"/>
-    <package name="org.osgi.service.resourcemonitoring.monitor" file="service.resourcemonitoring.html"/>
+    <package name="org.osgi.service.resourcemonitoring" file="service.resourcemonitoring.html" version="1.0"/>
+    <package name="org.osgi.service.resourcemonitoring.monitor" file="service.resourcemonitoring.html" version="1.0"/>
     <target id="service.usbinfo" file="service.usbinfo.html" title="USB Information Device Category Specification" label="145"/>
     <target id="service.usbinfo-figure-145-1" file="service.usbinfo.html" title="USB Information Device Service Overview Diagram"/>
     <target id="service.usbinfo-usbspec" file="service.usbinfo.html" title="Universal Serial Bus Specification Revision 1.1"/>
-    <package name="org.osgi.service.usbinfo" file="service.usbinfo.html"/>
+    <package name="org.osgi.service.usbinfo" file="service.usbinfo.html" version="1.0"/>
     <target id="service.serial" file="service.serial.html" title="Serial Device Service Specification" label="146"/>
     <target id="service.serial-figure-146-1" file="service.serial.html" title="Serial Device Service class diagram"/>
-    <package name="org.osgi.service.serial" file="service.serial.html"/>
+    <package name="org.osgi.service.serial" file="service.serial.html" version="1.0"/>
     <target id="service.transaction.control" file="service.transaction.control.html" title="Transaction Control Service Specification" label="147"/>
     <target id="service.transaction.control-simple-usage" file="service.transaction.control.html" title="Running Scoped Work" label="147.2.2"/>
     <target id="service.transaction.control-main.body" file="service.transaction.control.html" title="Transaction Control Service" label="147.3"/>
     <target id="service.transaction.control-capabilities" file="service.transaction.control.html" title="Capabilities" label="147.7"/>
     <target id="service.transaction.control-security" file="service.transaction.control.html" title="Security" label="147.8"/>
-    <package name="org.osgi.service.transaction.control" file="service.transaction.control.html"/>
-    <package name="org.osgi.service.transaction.control.jdbc" file="service.transaction.control.html"/>
-    <package name="org.osgi.service.transaction.control.jpa" file="service.transaction.control.html"/>
-    <package name="org.osgi.service.transaction.control.recovery" file="service.transaction.control.html"/>
+    <package name="org.osgi.service.transaction.control" file="service.transaction.control.html" version="1.0"/>
+    <package name="org.osgi.service.transaction.control.jdbc" file="service.transaction.control.html" version="1.0"/>
+    <package name="org.osgi.service.transaction.control.jpa" file="service.transaction.control.html" version="1.0"/>
+    <package name="org.osgi.service.transaction.control.recovery" file="service.transaction.control.html" version="1.0"/>
     <target id="service.clusterinfo" file="service.clusterinfo.html" title="Cluster Information Specification" label="148"/>
     <target id="service.clusterinfo-figure.cluster.deployment" file="service.clusterinfo.html" title="Example cluster deployment"/>
-    <package name="org.osgi.service.clusterinfo" file="service.clusterinfo.html"/>
-    <package name="org.osgi.service.clusterinfo.dto" file="service.clusterinfo.html"/>
+    <package name="org.osgi.service.clusterinfo" file="service.clusterinfo.html" version="1.0"/>
+    <package name="org.osgi.service.clusterinfo.dto" file="service.clusterinfo.html" version="1.0"/>
     <target id="service.zigbee" file="service.zigbee.html" title="Device Service Specification for ZigBee™ Technology" label="149"/>
     <target id="service.zigbee-figure_id_20160712_18h51_11" file="service.zigbee.html" title="ZigBee Service Specification class Diagram org.osgi.service.zigbee package"/>
     <target id="service.zigbee-figure_id_20160712_18h54_13" file="service.zigbee.html" title="ZigBee device import"/>
@@ -677,19 +677,19 @@
     <target id="service.zigbee-ref-ashrae-standard" file="service.zigbee.html" title="ASHRAE 135-2004 Standard"/>
     <target id="service.zigbee-ref-whiteboard-pattern" file="service.zigbee.html" title="Listeners considered harmful: The whiteboard pattern"/>
     <target id="service.zigbee-ref-zigbee-gateway" file="service.zigbee.html" title="ZigBee Gateway"/>
-    <package name="org.osgi.service.zigbee" file="service.zigbee.html"/>
-    <package name="org.osgi.service.zigbee.descriptions" file="service.zigbee.html"/>
-    <package name="org.osgi.service.zigbee.descriptors" file="service.zigbee.html"/>
-    <package name="org.osgi.service.zigbee.types" file="service.zigbee.html"/>
+    <package name="org.osgi.service.zigbee" file="service.zigbee.html" version="1.0"/>
+    <package name="org.osgi.service.zigbee.descriptions" file="service.zigbee.html" version="1.0"/>
+    <package name="org.osgi.service.zigbee.descriptors" file="service.zigbee.html" version="1.0"/>
+    <package name="org.osgi.service.zigbee.types" file="service.zigbee.html" version="1.0"/>
     <target id="service.configurator" file="service.configurator.html" title="Configurator Specification" label="150"/>
     <target id="service.configurator-resources" file="service.configurator.html" title="Configuration Resources" label="150.3"/>
     <target id="service.configurator-ranking" file="service.configurator.html" title="Ranking" label="150.3.5"/>
     <target id="service.configurator-policy" file="service.configurator.html" title="Overwrite Policies" label="150.3.6"/>
     <target id="service.configurator-json.ref" file="service.configurator.html" title="JSON (JavaScript Object Notation)"/>
     <target id="service.configurator-jsmin.ref" file="service.configurator.html" title="JSMin (The JavaScript Minifier)"/>
-    <package name="org.osgi.service.configurator" file="service.configurator.html"/>
-    <package name="org.osgi.service.configurator.annotations" file="service.configurator.html"/>
-    <package name="org.osgi.service.configurator.namespace" file="service.configurator.html"/>
+    <package name="org.osgi.service.configurator" file="service.configurator.html" version="1.0"/>
+    <package name="org.osgi.service.configurator.annotations" file="service.configurator.html" version="1.0"/>
+    <package name="org.osgi.service.configurator.namespace" file="service.configurator.html" version="1.0"/>
     <target id="service.jakartars" file="service.jakartars.html" title="Whiteboard Specification for Jakarta™ RESTful Web Services" label="151"/>
     <target id="service.jakartars.whiteboard-overview" file="service.jakartars.html" title="Jakarta RESTful Web Services Whiteboard Overview Diagram"/>
     <target id="service.jakartars.whiteboard" file="service.jakartars.html" title="The Jakarta RESTful Web Services Whiteboard" label="151.2"/>
@@ -707,12 +707,12 @@
     <target id="service.jakartars-iana.media.types" file="service.jakartars.html" title="IANA Media Type Registrations"/>
     <target id="service.jakartars-iana.media.type.suffixes" file="service.jakartars.html" title="IANA Media Type Suffix Registrations"/>
     <target id="service.jakartars-jaxrs-whiteboard.ref" file="service.jakartars.html" title="JAX-RS Service Whiteboard Specification"/>
-    <package name="org.osgi.service.jakartars.client" file="service.jakartars.html"/>
-    <package name="org.osgi.service.jakartars.runtime" file="service.jakartars.html"/>
-    <package name="org.osgi.service.jakartars.runtime.dto" file="service.jakartars.html"/>
-    <package name="org.osgi.service.jakartars.whiteboard" file="service.jakartars.html"/>
-    <package name="org.osgi.service.jakartars.whiteboard.annotations" file="service.jakartars.html"/>
-    <package name="org.osgi.service.jakartars.whiteboard.propertytypes" file="service.jakartars.html"/>
+    <package name="org.osgi.service.jakartars.client" file="service.jakartars.html" version="2.0"/>
+    <package name="org.osgi.service.jakartars.runtime" file="service.jakartars.html" version="2.0"/>
+    <package name="org.osgi.service.jakartars.runtime.dto" file="service.jakartars.html" version="2.0"/>
+    <package name="org.osgi.service.jakartars.whiteboard" file="service.jakartars.html" version="2.0"/>
+    <package name="org.osgi.service.jakartars.whiteboard.annotations" file="service.jakartars.html" version="2.0"/>
+    <package name="org.osgi.service.jakartars.whiteboard.propertytypes" file="service.jakartars.html" version="2.0"/>
     <target id="service.cdi" file="service.cdi.html" title="CDI Integration Specification" label="152"/>
     <target id="service.cdi-intro" file="service.cdi.html" title="Introduction" label="152.1"/>
     <target id="service.cdi-components" file="service.cdi.html" title="Components" label="152.2"/>
@@ -792,13 +792,13 @@
     <target id="service.cdi-bib.jta" file="service.cdi.html" title="Java Transaction API"/>
     <target id="service.cdi-bib.portable.java.contract" file="service.cdi.html" title="Portable Java Contract"/>
     <target id="service.cdi-bib.jls.ref" file="service.cdi.html" title="The Java Language Specification, Java SE 8 Edition"/>
-    <package name="org.osgi.service.cdi" file="service.cdi.html"/>
-    <package name="org.osgi.service.cdi.annotations" file="service.cdi.html"/>
-    <package name="org.osgi.service.cdi.propertytypes" file="service.cdi.html"/>
-    <package name="org.osgi.service.cdi.reference" file="service.cdi.html"/>
-    <package name="org.osgi.service.cdi.runtime" file="service.cdi.html"/>
-    <package name="org.osgi.service.cdi.runtime.dto" file="service.cdi.html"/>
-    <package name="org.osgi.service.cdi.runtime.dto.template" file="service.cdi.html"/>
+    <package name="org.osgi.service.cdi" file="service.cdi.html" version="1.0"/>
+    <package name="org.osgi.service.cdi.annotations" file="service.cdi.html" version="1.0"/>
+    <package name="org.osgi.service.cdi.propertytypes" file="service.cdi.html" version="1.0"/>
+    <package name="org.osgi.service.cdi.reference" file="service.cdi.html" version="1.0"/>
+    <package name="org.osgi.service.cdi.runtime" file="service.cdi.html" version="1.0"/>
+    <package name="org.osgi.service.cdi.runtime.dto" file="service.cdi.html" version="1.0"/>
+    <package name="org.osgi.service.cdi.runtime.dto.template" file="service.cdi.html" version="1.0"/>
     <target id="service.onem2m" file="service.onem2m.html" title="Service Layer API for oneM2M™" label="153"/>
     <target id="service.onem2m.ts-0001.ref" file="service.onem2m.html" title="oneM2M: TS-0001 Functional Architecture V3.15.1"/>
     <target id="service.onem2m.ts-0004.ref" file="service.onem2m.html" title="oneM2M: TS-0004 Service Layer Core Protocol V3.11.2"/>
@@ -807,8 +807,8 @@
     <target id="service.onem2m.ts-0010.ref" file="service.onem2m.html" title="oneM2M: TS-0010 MQTT Protocol Binding V3.0.1"/>
     <target id="service.onem2m.ts-0020.ref" file="service.onem2m.html" title="oneM2M: TS-0020 WebSocket Protocol Binding V3.0.1"/>
     <target id="service.onem2m.xsd.ref" file="service.onem2m.html" title="oneM2M-schemas"/>
-    <package name="org.osgi.service.onem2m" file="service.onem2m.html"/>
-    <package name="org.osgi.service.onem2m.dto" file="service.onem2m.html"/>
+    <package name="org.osgi.service.onem2m" file="service.onem2m.html" version="1.0"/>
+    <package name="org.osgi.service.onem2m.dto" file="service.onem2m.html" version="1.0"/>
     <target id="dmtree.residential" file="dmtree.residential.html" title="Residential Device Management Tree Specification" label="154"/>
     <target id="i758771" file="dmtree.residential.html" title="Device Management Architecture"/>
     <target id="i730417" file="dmtree.residential.html" title="Requirements and Capabilities and their Wiring"/>
@@ -825,27 +825,27 @@
     <target id="service.typedevent" file="service.typedevent.html" title="Typed Event Service Specification" label="157"/>
     <target id="typedevent.event.topics" file="service.typedevent.html" title="Event Topics" label="157.3.1"/>
     <target id="service.typedevent-monitor" file="service.typedevent.html" title="Monitoring Events" label="157.6"/>
-    <package name="org.osgi.service.typedevent" file="service.typedevent.html"/>
-    <package name="org.osgi.service.typedevent.annotations" file="service.typedevent.html"/>
-    <package name="org.osgi.service.typedevent.monitor" file="service.typedevent.html"/>
-    <package name="org.osgi.service.typedevent.propertytypes" file="service.typedevent.html"/>
+    <package name="org.osgi.service.typedevent" file="service.typedevent.html" version="1.0"/>
+    <package name="org.osgi.service.typedevent.annotations" file="service.typedevent.html" version="1.0"/>
+    <package name="org.osgi.service.typedevent.monitor" file="service.typedevent.html" version="1.0"/>
+    <package name="org.osgi.service.typedevent.propertytypes" file="service.typedevent.html" version="1.0"/>
     <target id="service.log.stream" file="service.log.stream.html" title="Log Stream Provider Service Specification" label="158"/>
     <target id="service.log.stream-log.ref" file="service.log.stream.html" title="Log Service"/>
-    <package name="org.osgi.service.log.stream" file="service.log.stream.html"/>
+    <package name="org.osgi.service.log.stream" file="service.log.stream.html" version="1.0"/>
     <target id="service.feature" file="service.feature.html" title="Feature Service Specification" label="159"/>
     <target id="service.feature-identifiers" file="service.feature.html" title="Identifiers" label="159.2.1"/>
     <target id="service.feature-variables" file="service.feature.html" title="Variables" label="159.6"/>
     <target id="service.feature-json.ref" file="service.feature.html" title="JSON (JavaScript Object Notation)"/>
     <target id="service.feature-jsmin.ref" file="service.feature.html" title="JSMin (The JavaScript Minifier)"/>
     <target id="service.feature-mvnpom.ref" file="service.feature.html" title="Apache Maven Pom Reference"/>
-    <package name="org.osgi.service.feature" file="service.feature.html"/>
-    <package name="org.osgi.service.feature.annotation" file="service.feature.html"/>
+    <package name="org.osgi.service.feature" file="service.feature.html" version="1.0"/>
+    <package name="org.osgi.service.feature.annotation" file="service.feature.html" version="1.0"/>
     <target id="util.xml" file="util.xml.html" title="XML Parser Service Specification" label="702"/>
     <target id="i1259424" file="util.xml.html" title="Properties" label="702.4"/>
     <target id="i1255594" file="util.xml.html" title="JAXP"/>
     <target id="i1267674" file="util.xml.html" title="JAR File specification, Service Provider"/>
     <target id="i1286146" file="util.xml.html" title="Xerces 2 Java Parser"/>
-    <package name="org.osgi.util.xml" file="util.xml.html"/>
+    <package name="org.osgi.util.xml" file="util.xml.html" version="1.0"/>
     <target id="util.promise" file="util.promise.html" title="Promises Specification" label="705"/>
     <target id="util.promise-callbacks" file="util.promise.html" title="Callbacks" label="705.4"/>
     <target id="util.promise-callbacks.consumer" file="util.promise.html" title="Consumer" label="705.4.2"/>
@@ -856,13 +856,13 @@
     <target id="util.promise-ref.javascript" file="util.promise.html" title="JavaScript Promises"/>
     <target id="util.promise-ref.monad" file="util.promise.html" title="Monad"/>
     <target id="util.promise-ref.functional.interfaces" file="util.promise.html" title="Function Interfaces"/>
-    <package name="org.osgi.util.promise" file="util.promise.html"/>
-    <package name="org.osgi.util.function" file="util.promise.html"/>
+    <package name="org.osgi.util.promise" file="util.promise.html" version="1.3"/>
+    <package name="org.osgi.util.function" file="util.promise.html" version="1.2"/>
     <target id="util.pushstream" file="util.pushstream.html" title="Push Stream Specification" label="706"/>
     <target id="util.pushstream.back-pressure" file="util.pushstream.html" title="Back pressure" label="706.3.2.1"/>
     <target id="util.pushstream.building-a-stream" file="util.pushstream.html" title="Building a Buffer or Push Stream" label="706.3.2.4"/>
     <target id="util.pushstream-ref.java8stream" file="util.pushstream.html" title="Java 8 Stream API"/>
-    <package name="org.osgi.util.pushstream" file="util.pushstream.html"/>
+    <package name="org.osgi.util.pushstream" file="util.pushstream.html" version="1.1"/>
     <target id="util.converter" file="util.converter.html" title="Converter Specification" label="707"/>
     <target id="util.converter-conversions" file="util.converter.html" title="Conversions" label="707.4"/>
     <target id="util.converter-special.cases.string" file="util.converter.html" title="Special cases converting to scalars from String"/>
@@ -876,7 +876,7 @@
     <target id="util.converter-getProperties" file="util.converter.html" title="Types with getProperties()" label="707.4.4.4.8"/>
     <target id="util.converter-customizing.converters" file="util.converter.html" title="Customizing converters" label="707.6"/>
     <target id="util.converter-jls.ref" file="util.converter.html" title="The Java Language Specification, Java SE 8 Edition"/>
-    <package name="org.osgi.util.converter" file="util.converter.html"/>
+    <package name="org.osgi.util.converter" file="util.converter.html" version="1.0"/>
   </book>
   <book path="osgi.core/8.0.0/">
     <target id="framework.introduction" file="framework.introduction.html" title="Introduction" label="1"/>
@@ -1155,14 +1155,14 @@
     <target id="i1334328" file="framework.startlevel.html" title="Startup Sequence" label="9.3.2"/>
     <target id="i1277583" file="framework.startlevel.html" title="Shutdown Sequence" label="9.3.3"/>
     <target id="framework.api" file="framework.api.html" title="Framework API" label="10"/>
-    <package name="org.osgi.framework" file="framework.api.html"/>
-    <package name="org.osgi.framework.launch" file="framework.api.html"/>
-    <package name="org.osgi.resource" file="framework.api.html"/>
-    <package name="org.osgi.framework.wiring" file="framework.api.html"/>
-    <package name="org.osgi.framework.startlevel" file="framework.api.html"/>
-    <package name="org.osgi.framework.namespace" file="framework.api.html"/>
-    <package name="org.osgi.annotation.versioning" file="framework.api.html"/>
-    <package name="org.osgi.annotation.bundle" file="framework.api.html"/>
+    <package name="org.osgi.framework" file="framework.api.html" version="1.10"/>
+    <package name="org.osgi.framework.launch" file="framework.api.html" version="1.2"/>
+    <package name="org.osgi.resource" file="framework.api.html" version="1.0"/>
+    <package name="org.osgi.framework.wiring" file="framework.api.html" version="1.2"/>
+    <package name="org.osgi.framework.startlevel" file="framework.api.html" version="1.0"/>
+    <package name="org.osgi.framework.namespace" file="framework.api.html" version="1.2"/>
+    <package name="org.osgi.annotation.versioning" file="framework.api.html" version="1.1"/>
+    <package name="org.osgi.annotation.bundle" file="framework.api.html" version="1.1"/>
     <target id="service.condpermadmin" file="service.condpermadmin.html" title="Conditional Permission Admin Service Specification" label="50"/>
     <target id="i1534520" file="service.condpermadmin.html" title="Permission Management Model" label="50.2"/>
     <target id="i1470195" file="service.condpermadmin.html" title="Local Permissions" label="50.2.1"/>
@@ -1190,9 +1190,9 @@
     <target id="i1543285" file="service.condpermadmin.html" title="Relation to Permission Admin" label="50.12"/>
     <target id="i1706619" file="service.condpermadmin.html" title="Optimizing Immutable Conditions" label="50.13.1"/>
     <target id="i1691964" file="service.condpermadmin.html" title="Condition Life Cycle" label="50.13.6"/>
-    <package name="org.osgi.service.condpermadmin" file="service.condpermadmin.html"/>
+    <package name="org.osgi.service.condpermadmin" file="service.condpermadmin.html" version="1.1"/>
     <target id="service.permissionadmin" file="service.permissionadmin.html" title="Permission Admin Service Specification" label="51"/>
-    <package name="org.osgi.service.permissionadmin" file="service.permissionadmin.html"/>
+    <package name="org.osgi.service.permissionadmin" file="service.permissionadmin.html" version="1.2"/>
     <target id="service.url" file="service.url.html" title="URL Handlers Service Specification" label="52"/>
     <target id="i1413781" file="service.url.html" title="Built-in Handlers" label="52.3.2"/>
     <target id="i1407205" file="service.url.html" title="Protected Methods and Proxy" label="52.3.4"/>
@@ -1201,31 +1201,31 @@
     <target id="service.url.references" file="service.url.html" title="References" label="52.7"/>
     <target id="i1260753" file="service.url.html" title="MIME Multipurpose Internet Mail Extension"/>
     <target id="i1260756" file="service.url.html" title="Assigned MIME Media Types"/>
-    <package name="org.osgi.service.url" file="service.url.html"/>
+    <package name="org.osgi.service.url" file="service.url.html" version="1.0"/>
     <target id="framework.resolverhooks" file="framework.resolverhooks.html" title="Resolver Hook Service Specification" label="53"/>
     <target id="i1703638" file="framework.resolverhooks.html" title="Failures" label="53.3.2"/>
-    <package name="org.osgi.framework.hooks.resolver" file="framework.resolverhooks.html"/>
+    <package name="org.osgi.framework.hooks.resolver" file="framework.resolverhooks.html" version="1.0"/>
     <target id="framework.bundlehooks" file="framework.bundlehooks.html" title="Bundle Hook Service Specification" label="54"/>
     <target id="framework.bundlehooks.collisionhook" file="framework.bundlehooks.html" title="Bundle Collision Hook" label="54.5"/>
-    <package name="org.osgi.framework.hooks.bundle" file="framework.bundlehooks.html"/>
+    <package name="org.osgi.framework.hooks.bundle" file="framework.bundlehooks.html" version="1.1"/>
     <target id="framework.servicehooks" file="framework.servicehooks.html" title="Service Hook Service Specification" label="55"/>
     <target id="i1664951" file="framework.servicehooks.html" title="Event Listener Hook Interaction"/>
     <target id="framework.servicehooks-whiteboard.pattern.ref" file="framework.servicehooks.html" title="Whiteboard Pattern"/>
-    <package name="org.osgi.framework.hooks.service" file="framework.servicehooks.html"/>
+    <package name="org.osgi.framework.hooks.service" file="framework.servicehooks.html" version="1.1"/>
     <target id="framework.weavinghooks" file="framework.weavinghooks.html" title="Weaving Hook Service Specification" label="56"/>
     <target id="framework.weavinghooks-wovenclasslistener" file="framework.weavinghooks.html" title="Woven Class Listener" label="56.4"/>
     <target id="framework.weavinghooks-woven.class.state.table" file="framework.weavinghooks.html" title="Woven Class State Table"/>
     <target id="framework.weavinghooks-whiteboard.pattern.ref" file="framework.weavinghooks.html" title="Whiteboard Pattern"/>
-    <package name="org.osgi.framework.hooks.weaving" file="framework.weavinghooks.html"/>
+    <package name="org.osgi.framework.hooks.weaving" file="framework.weavinghooks.html" version="1.1"/>
     <target id="framework.dto" file="framework.dto.html" title="Data Transfer Objects Specification" label="57"/>
     <target id="framework.dto-obtaining-dtos" file="framework.dto.html" title="Obtaining Core Data Transfer Objects" label="57.4"/>
     <target id="framework.dto.references" file="framework.dto.html" title="References" label="57.6"/>
     <target id="framework.dto.references-dto" file="framework.dto.html" title="Data Transfer Object"/>
-    <package name="org.osgi.dto" file="framework.dto.html"/>
-    <package name="org.osgi.framework.dto" file="framework.dto.html"/>
-    <package name="org.osgi.framework.startlevel.dto" file="framework.dto.html"/>
-    <package name="org.osgi.framework.wiring.dto" file="framework.dto.html"/>
-    <package name="org.osgi.resource.dto" file="framework.dto.html"/>
+    <package name="org.osgi.dto" file="framework.dto.html" version="1.1"/>
+    <package name="org.osgi.framework.dto" file="framework.dto.html" version="1.8"/>
+    <package name="org.osgi.framework.startlevel.dto" file="framework.dto.html" version="1.0"/>
+    <package name="org.osgi.framework.wiring.dto" file="framework.dto.html" version="1.3"/>
+    <package name="org.osgi.resource.dto" file="framework.dto.html" version="1.0"/>
     <target id="service.resolver" file="service.resolver.html" title="Resolver Service Specification" label="58"/>
     <target id="i3331037" file="service.resolver.html" title="Entities" label="58.1.2"/>
     <target id="i3344409" file="service.resolver.html" title="Finding Capabilities" label="58.2.2"/>
@@ -1234,14 +1234,14 @@
     <target id="i3347566" file="service.resolver.html" title="Dynamic Resolving" label="58.3.3"/>
     <target id="i3331809" file="service.resolver.html" title="Security" label="58.4"/>
     <target id="service.resolver-ref.service.repository" file="service.resolver.html" title="Repository Service Specification"/>
-    <package name="org.osgi.service.resolver" file="service.resolver.html"/>
+    <package name="org.osgi.service.resolver" file="service.resolver.html" version="1.1"/>
     <target id="service.condition" file="service.condition.html" title="Condition Service Specification" label="59"/>
     <target id="service.condition.introduction" file="service.condition.html" title="Introduction" label="59.1"/>
     <target id="service.condition.entities" file="service.condition.html" title="Entities" label="59.1.2"/>
     <target id="service.condition.operation" file="service.condition.html" title="Condition Service" label="59.2"/>
     <target id="service.condition-true.condition" file="service.condition.html" title="True Condition" label="59.2.1"/>
     <target id="service.condition.security" file="service.condition.html" title="Security" label="59.3"/>
-    <package name="org.osgi.service.condition" file="service.condition.html"/>
+    <package name="org.osgi.service.condition" file="service.condition.html" version="1.0"/>
     <target id="framework.connect" file="framework.connect.html" title="Connect Specification" label="60"/>
     <target id="framework.connect.initializing" file="framework.connect.html" title="Initializing the Module Connector" label="60.2.2"/>
     <target id="framework.connect.lifecycle" file="framework.connect.html" title="Module Connector Life Cycle" label="60.2.3"/>
@@ -1249,7 +1249,7 @@
     <target id="framework.connect.service.provider" file="framework.connect.html" title="Java Service Provider Configuration Support for Connect" label="60.2.4"/>
     <target id="framework.connect.bundle" file="framework.connect.html" title="Connect Bundles" label="60.3"/>
     <target id="framework.connect.bundle.install" file="framework.connect.html" title="Installing Connect Bundles" label="60.3.1"/>
-    <package name="org.osgi.framework.connect" file="framework.connect.html"/>
+    <package name="org.osgi.framework.connect" file="framework.connect.html" version="1.0"/>
     <target id="service.log" file="service.log.html" title="Log Service Specification" label="101"/>
     <target id="service.log-effective.log.level" file="service.log.html" title="Effective Log Level" label="101.4.2"/>
     <target id="i1210758" file="service.log.html" title="Log Reader Service" label="101.5"/>
@@ -1261,9 +1261,9 @@
     <target id="service.log-slf4j.ref" file="service.log.html" title="SLF4J"/>
     <target id="service.log-configurator.ref" file="service.log.html" title="Configurator"/>
     <target id="service.log-log.stream.ref" file="service.log.html" title="Log Stream Provider Service"/>
-    <package name="org.osgi.service.log" file="service.log.html"/>
-    <package name="org.osgi.service.log.admin" file="service.log.html"/>
+    <package name="org.osgi.service.log" file="service.log.html" version="1.5"/>
+    <package name="org.osgi.service.log.admin" file="service.log.html" version="1.0"/>
     <target id="util.tracker" file="util.tracker.html" title="Tracker Specification" label="701"/>
-    <package name="org.osgi.util.tracker" file="util.tracker.html"/>
+    <package name="org.osgi.util.tracker" file="util.tracker.html" version="1.5"/>
   </book>
 </index>
