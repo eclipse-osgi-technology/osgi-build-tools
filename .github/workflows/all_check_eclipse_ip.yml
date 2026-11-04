@@ -14,6 +14,6 @@ jobs:
   call-license-check:
     permissions:
       pull-requests: write
-    uses: eclipse-osgi-technology/.github/.github/workflows/reuse_all_check_eclipse_ip.yml@main
+    uses: eclipse-osgi-technology/.github/.github/workflows/reuse_all_check_eclipse_ip.yml@aaa98d527667f930b6ff51e86e4568988b3ea1d3 # 0.0.1
     secrets:
       GITLAB_API_TOKEN: ${{ secrets.GITLAB_API_TOKEN }}

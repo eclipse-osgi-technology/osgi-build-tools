@@ -14,6 +14,6 @@ jobs:
       statuses: write
       contents: read
       packages: read
-    uses: eclipse-osgi-technology/.github/.github/workflows/reuse_all_check_editor_config_format.yml@main
+    uses: eclipse-osgi-technology/.github/.github/workflows/reuse_all_check_editor_config_format.yml@aaa98d527667f930b6ff51e86e4568988b3ea1d3 # 0.0.1
     secrets:
       envGH: ${{ secrets.GITHUB_TOKEN }}
