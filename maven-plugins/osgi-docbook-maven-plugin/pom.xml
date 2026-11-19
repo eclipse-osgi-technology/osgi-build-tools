@@ -21,9 +21,8 @@
   </parent>
   <artifactId>osgi-docbook-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <name>Eclipse OSGi Technology Dockbook Maven Plugin</name>
-  <description>A Maven Plugin used to generate OSGi specification chapters from
-    docbook</description>
+  <name>Eclipse OSGi Technology DocBook Maven Plugin</name>
+  <description>A Maven Plugin used to generate OSGi specification chapters from DocBook</description>
 
   <properties>
     <saxon.version>13.0</saxon.version>

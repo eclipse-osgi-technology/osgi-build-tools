@@ -61,9 +61,11 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOsgiSpecMojo.class);
 
+    /** The DocBook source of the chapter, relative to the project base directory */
     @Parameter(property = "osgi.docbook.spec.source", defaultValue = "src/main/resources/spec/spec.xml")
     String chapterSource;
 
+    /** The title of the specification, used when a single chapter is built; not used for a book */
     @Parameter(property = "osgi.docbook.spec.title", defaultValue = "${project.name}")
     String specTitle;
 
@@ -137,6 +139,7 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
     @Inject
     RepositorySystem repositorySystem;
 
+    /** The repository session used to resolve the DocBook archives of a book */
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
     RepositorySystemSession repositorySession;
 
