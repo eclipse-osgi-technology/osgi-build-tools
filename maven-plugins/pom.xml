@@ -94,11 +94,10 @@
               <archive combine.self="override"/>
             </configuration>
           </execution>
+          <!-- The test jar is of no use to users, so it is not built or deployed -->
           <execution>
             <id>test-jar</id>
-            <configuration>
-              <archive combine.self="override"/>
-            </configuration>
+            <phase>none</phase>
           </execution>
         </executions>
       </plugin>
