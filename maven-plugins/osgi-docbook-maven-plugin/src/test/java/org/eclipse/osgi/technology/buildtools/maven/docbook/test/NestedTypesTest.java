@@ -61,7 +61,7 @@ class NestedTypesTest {
             MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
             project.setArtifact(new ArtifactStubFactory().createArtifact(
                     project.getGroupId(), project.getArtifactId(), project.getVersion()));
-            MojoExtension.setVariableValueToObject(mojo, "attachZip", false);
+            MojoExtension.setVariableValueToObject(mojo, "attach", false);
             mojo.execute();
 
             Path spec = Path.of(project.getBuild().getDirectory(), "spec");

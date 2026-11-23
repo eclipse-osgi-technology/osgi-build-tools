@@ -99,6 +99,33 @@ class PDFGenerationTest {
     @Test
     @InjectMojo(goal = "pdf")
     @Basedir("/test-projects/simple")
+    public void testSkip(OsgiSpecPdfMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        MojoExtension.setVariableValueToObject(mojo, "skip", true);
+        mojo.execute();
+
+        assertTrue(project.getAttachedArtifacts().isEmpty(), "A skipped goal attached an artifact");
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
+    public void testNotAttached(OsgiSpecPdfMojo mojo) throws Exception {
+        MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
+        project.setArtifact(new ArtifactStubFactory().createArtifact(
+                project.getGroupId(), project.getArtifactId(), project.getVersion()));
+        MojoExtension.setVariableValueToObject(mojo, "attach", false);
+        mojo.execute();
+
+        assertTrue(project.getAttachedArtifacts().isEmpty(), "The PDF was attached");
+        try (var files = Files.list(Path.of(project.getBuild().getDirectory(), "spec", "pdf"))) {
+            assertTrue(files.anyMatch(f -> f.getFileName().toString().endsWith(".pdf")), "No PDF was written");
+        }
+    }
+
+    @Test
+    @InjectMojo(goal = "pdf")
+    @Basedir("/test-projects/simple")
     public void testLinksToOtherSpecifications(OsgiSpecPdfMojo mojo) throws Exception {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(

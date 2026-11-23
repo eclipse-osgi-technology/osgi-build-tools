@@ -22,12 +22,10 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -78,21 +76,13 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
 
     private static final Logger LOG = LoggerFactory.getLogger(OsgiSpecPdfMojo.class);
 
-    /**
-     * Link references to chapters and packages that are not part of this
-     * specification to their published pages. When false they are rendered as
-     * plain text.
-     */
-    @Parameter(property = "osgi.docbook.pdf.externalLinks", defaultValue = "true")
-    boolean externalLinks;
+    /** Skip the PDF generation */
+    @Parameter(property = "osgi.docbook.pdf.skip", defaultValue = "false")
+    boolean skip;
 
-    /** The URL that the paths in the external link index are relative to */
-    @Parameter(property = "osgi.docbook.pdf.externalLinkBaseUrl", defaultValue = "https://docs.osgi.org/specification/")
-    String externalLinkBaseUrl;
-
-    /** An external link index to use instead of the bundled one */
-    @Parameter(property = "osgi.docbook.pdf.externalLinkIndex")
-    File externalLinkIndex;
+    /** Attach the FO and the PDF to the project with the classifier {@code specification} */
+    @Parameter(property = "osgi.docbook.pdf.attach", defaultValue = "true")
+    boolean attach;
 
     @Override
     String formatName() {
@@ -100,15 +90,8 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
     }
 
     @Override
-    URL linkIndex() throws MojoExecutionException {
-        if (externalLinkIndex == null) {
-            return super.linkIndex();
-        }
-        try {
-            return externalLinkIndex.toPath().toAbsolutePath().toUri().toURL();
-        } catch (MalformedURLException e) {
-            throw new MojoExecutionException("Not a link index: " + externalLinkIndex, e);
-        }
+    boolean isSkipped() {
+        return skip;
     }
 
     @Override
@@ -119,10 +102,12 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
         Path pdf = generatePDF(foFile, buildDir, book.bookDir(), newTransformerFactory());
         LOG.info("Specification PDF generation and transformation complete");
 
-        // We attach the FO as it can be used to make a diff in the future
-        helper.attachArtifact(project, "fo", "specification", foFile.toFile());
-        // We attach the PDF as it is our primary output
-        helper.attachArtifact(project, "pdf", "specification", pdf.toFile());
+        if (attach) {
+            // We attach the FO as it can be used to make a diff in the future
+            helper.attachArtifact(project, "fo", "specification", foFile.toFile());
+            // We attach the PDF as it is our primary output
+            helper.attachArtifact(project, "pdf", "specification", pdf.toFile());
+        }
     }
 
     /**
@@ -144,8 +129,7 @@ public class OsgiSpecPdfMojo extends AbstractOsgiSpecMojo {
             transformer.setParameter("draft.mode", draftMode);
             // A complete book must contain the target of every link: a link
             // that is missing there is an error, not a link to another book
-            externalLinks(transformer, externalLinks && bookSource == null, externalLinkIndex,
-                    externalLinkBaseUrl);
+            externalLinks(transformer, externalLinks && bookSource == null);
             // custom-fo.xsl asks for indentation, which Saxon also applies to
             // mixed content: it puts spaces around links and inline elements
             transformer.setOutputProperty(OutputKeys.INDENT, "no");
