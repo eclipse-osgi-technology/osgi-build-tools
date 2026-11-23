@@ -356,5 +356,8 @@ reached Maven Central cannot be released again.
 
 ## License
 
-This project is distributed under the Apache License 2.0. See the source files
-and bundled resource notices for the licensing terms of included components.
+This project is distributed under the Eclipse Public License 2.0
+(`EPL-2.0`). Code taken over from the OSGi specification project is licensed
+under the Apache License 2.0, as stated in its source file headers. See the
+source files and bundled resource notices for the licensing terms of included
+components.
