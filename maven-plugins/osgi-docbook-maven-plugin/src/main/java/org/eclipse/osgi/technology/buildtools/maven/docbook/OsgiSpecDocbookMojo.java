@@ -37,16 +37,11 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.inject.Inject;
-
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +67,7 @@ import org.slf4j.LoggerFactory;
  * run after this goal in the same build render the archive.
  */
 @Mojo(name = "docbook", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class OsgiSpecDocbookMojo extends AbstractMojo {
+public class OsgiSpecDocbookMojo extends AbstractSpecMojo {
 
     /** The classifier of the DocBook archive */
     static final String CLASSIFIER = "docbook";
@@ -86,21 +81,9 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
     private static final Pattern ID = Pattern
             .compile("<(?:\\w+:)?(?:chapter|appendix|preface|part|article|section)\\b[^>]*?\\bxml:id=\"([^\"]+)\"");
 
-    /** The chapter of the project; a missing file means the project has none */
-    @Parameter(property = "osgi.docbook.spec.source", defaultValue = "src/main/resources/spec/spec.xml")
-    String chapterSource;
-
     /** More chapters of the same project */
-    @Parameter
+    @Parameter(property = "osgi.docbook.chapterSources")
     List<File> chapterSources;
-
-    /**
-     * The sources of the API to document, e.g. {@code ../api/src/main/java}
-     * for a specification module next to the API module. Roots that do not
-     * exist are ignored; without any, the compile source roots are documented.
-     */
-    @Parameter
-    List<File> apiSourceRoots;
 
     /**
      * The sources of other projects whose javadoc the chapters include, such
@@ -116,11 +99,9 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
     @Parameter(property = "osgi.docbook.docbook.skip", defaultValue = "false")
     boolean skip;
 
-    @Inject
-    MavenProject project;
-
-    @Inject
-    MavenProjectHelper helper;
+    /** Attach the DocBook archive to the project with the classifier {@code docbook} */
+    @Parameter(property = "osgi.docbook.docbook.attach", defaultValue = "true")
+    boolean attach;
 
     private Path outDir;
 
@@ -187,12 +168,17 @@ public class OsgiSpecDocbookMojo extends AbstractMojo {
         if (baseName == null || baseName.isBlank()) {
             baseName = project.getArtifactId() + "-" + project.getVersion();
         }
-        Path zip = buildDir.resolve(baseName + "-" + CLASSIFIER + ".zip");
-        zip(outDir, zip);
-        helper.attachArtifact(project, "zip", CLASSIFIER, zip.toFile());
+        // the pdf and html goals render the unpacked archive, wherever it is attached
         project.setContextValue(BookStaging.ARCHIVE, outDir);
-        LOG.info("DocBook archive {} with chapters {} and {} packages attached", zip.getFileName(), ids,
-                packages.size());
+        if (attach) {
+            Path zip = buildDir.resolve(baseName + "-" + CLASSIFIER + ".zip");
+            zip(outDir, zip);
+            helper.attachArtifact(project, "zip", CLASSIFIER, zip.toFile());
+            LOG.info("DocBook archive {} with chapters {} and {} packages attached", zip.getFileName(), ids,
+                    packages.size());
+        } else {
+            LOG.info("DocBook archive with chapters {} and {} packages not attached", ids, packages.size());
+        }
     }
 
     /**

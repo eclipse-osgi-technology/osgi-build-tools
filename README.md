@@ -151,28 +151,47 @@ the published specifications.
 
 ### Plugin properties
 
-Override the defaults with Maven properties or plugin configuration:
+Override the defaults with Maven properties or plugin configuration. A
+parameter that several goals share has the property `osgi.docbook.<parameter>`,
+named exactly like the parameter. A parameter of a single goal, and the `skip`
+and `attach` parameters that every goal has, have the property
+`osgi.docbook.<goal>.<parameter>`.
+
+Shared by the `pdf`, `html` and `docbook` goals:
 
 | Property | Default | Purpose |
 | --- | --- | --- |
-| `osgi.docbook.spec.source` | `src/main/resources/spec/spec.xml` | Path to the DocBook specification chapter, relative to the project base directory |
-| `osgi.docbook.spec.title` | `${project.name}` | Title inserted into the generated specification book |
-| `osgi.docbook.html.skip` | `false` | Skip the `html` goal |
-| `osgi.docbook.html.attach` | `true` | Create and attach the zip of the HTML site |
-| `osgi.docbook.html.externalLinks` | `true` | Link references outside the book to the published specifications; `false` renders them as text |
-| `osgi.docbook.html.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | The URL that the book paths of the link index are relative to |
-| `osgi.docbook.html.externalLinkIndex` | none | A link index file to use instead of the bundled one |
-| `osgi.docbook.pdf.externalLinks` | `true` | As `osgi.docbook.html.externalLinks`, for the PDF of a chapter |
-| `osgi.docbook.pdf.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | As `osgi.docbook.html.externalLinkBaseUrl`, for the PDF |
-| `osgi.docbook.pdf.externalLinkIndex` | none | As `osgi.docbook.html.externalLinkIndex`, for the PDF |
+| `osgi.docbook.chapterSource` | `src/main/resources/spec/spec.xml` | Path to the DocBook specification chapter, relative to the project base directory |
+| `osgi.docbook.apiSourceRoots` | the compile source roots | Comma separated source roots of the API to document |
+
+Shared by the `pdf` and `html` goals:
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `osgi.docbook.specTitle` | `${project.name}` | Title inserted into the generated specification book |
+| `osgi.docbook.draftMode` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
+| `osgi.docbook.copyrightYear` | the years of the book | The years of the copyright line, e.g. `2000, 2022` |
+| `osgi.docbook.releaseVersion` | `${project.version}` | The release shown in the HTML page titles, e.g. `8`; the PDF does not show it |
+| `osgi.docbook.externalLinks` | `true` | Link references outside the book to the published specifications; `false` renders them as text |
+| `osgi.docbook.externalLinkBaseUrl` | `https://docs.osgi.org/specification/` | The URL that the book paths of the link index are relative to |
+| `osgi.docbook.externalLinkIndex` | none | A link index file to use instead of the bundled one |
+| `osgi.docbook.failOnUnresolvedLinks` | `true` for a complete book, else `false` | Fail the build on a reference whose target is not in the book, see [Links to other specifications](#links-to-other-specifications) |
+| `osgi.docbook.bookSource` | none | A complete book instead of a single chapter, see below |
+| `osgi.docbook.docbooks` | none | Comma separated DocBook archives of a complete book, `groupId:artifactId:version` |
+| `osgi.docbook.docbookFallback` | `src/main/docbook` | The unpacked DocBook archives that a book uses when one is not in a Maven repository |
+
+Of a single goal:
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `osgi.docbook.pdf.skip`, `osgi.docbook.html.skip`, `osgi.docbook.docbook.skip` | `false` | Skip the goal |
+| `osgi.docbook.pdf.attach`, `osgi.docbook.html.attach`, `osgi.docbook.docbook.attach` | `true` | Attach the output of the goal to the project: the FO and PDF, the zip of the HTML site (which is only created when it is attached), or the DocBook archive |
 | `osgi.docbook.html.rootFilename` | `index` | File name of the page with the title and table of contents; the published books use `toc` |
 | `osgi.docbook.html.chapterImageNames` | `false` | Prefix SVG image names with the chapter label (`002-delegation-model.svg`), as the published books do; a complete book needs this when chapters use the same file name |
 | `osgi.docbook.html.rasterizeImages` | `false` | Convert SVG images into PNG images (scale 2, 300 dpi), as the published books do |
-| `osgi.docbook.draft` | `yes` for a `-SNAPSHOT`, else `no` | `no` renders a final specification, without watermark and draft content |
-| `osgi.docbook.release.version` | `${project.version}` | The release shown in the HTML page titles, e.g. `8` |
-| `osgi.docbook.book.source` | none | A complete book instead of a single chapter, see below |
-| `osgi.docbook.failOnUnresolvedLinks` | `true` for a complete book, else `false` | Fail the build on a reference whose target is not in the book, see [Links to other specifications](#links-to-other-specifications) |
-| `osgi.docbook.docbook.skip` | `false` | Skip the `docbook` goal |
+| `osgi.docbook.chapterSources` | none | `docbook` goal: comma separated further chapters of the project |
+
+The `includedSourceRoots` parameter of the `docbook` goal has no property.
 
 For example:
 
@@ -192,8 +211,8 @@ The corresponding command-line properties are:
 
 ```sh
 mvn compile \
-    -Dosgi.docbook.spec.source=src/main/resources/spec/custom-spec.xml \
-    -Dosgi.docbook.spec.title="My OSGi Specification"
+    -Dosgi.docbook.chapterSource=src/main/resources/spec/custom-spec.xml \
+    -Dosgi.docbook.specTitle="My OSGi Specification"
 ```
 
 ### DocBook archive of a specification project
@@ -263,7 +282,7 @@ The archives and the book are staged into one directory, so the book includes
 its chapters with plain relative paths, e.g.
 `<xi:include href="chapters/service.cm/service.cm.xml"/>`, and a chapter
 finds the javadoc of any package of the book. The book is rendered as the
-monorepo build did: profiled (`osgi.docbook.draft`), with its own title page
+monorepo build did: profiled (`osgi.docbook.draftMode`), with its own title page
 and release information, and without the javadoc step.
 
 ## Development

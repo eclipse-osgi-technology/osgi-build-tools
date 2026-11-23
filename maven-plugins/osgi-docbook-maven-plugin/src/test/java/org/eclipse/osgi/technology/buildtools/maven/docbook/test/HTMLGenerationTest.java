@@ -112,7 +112,7 @@ class HTMLGenerationTest {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
-        MojoExtension.setVariableValueToObject(mojo, "attachZip", false);
+        MojoExtension.setVariableValueToObject(mojo, "attach", false);
         // the migrated chapters reference their javadoc through the legacy
         // monorepo path generated/javadoc/docbook/<package>.xml
         MojoExtension.setVariableValueToObject(mojo, "chapterSource",
@@ -132,7 +132,7 @@ class HTMLGenerationTest {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
-        MojoExtension.setVariableValueToObject(mojo, "attachZip", false);
+        MojoExtension.setVariableValueToObject(mojo, "attach", false);
         MojoExtension.setVariableValueToObject(mojo, "chapterSource",
                 "src/main/resources/spec/spec-missing-include.xml");
         // a listing that resolves nowhere must fail the build, not be dropped
@@ -151,7 +151,7 @@ class HTMLGenerationTest {
         MavenProject project = MojoExtension.getVariableValueFromObject(mojo, "project");
         project.setArtifact(new ArtifactStubFactory().createArtifact(
                 project.getGroupId(), project.getArtifactId(), project.getVersion()));
-        MojoExtension.setVariableValueToObject(mojo, "attachZip", false);
+        MojoExtension.setVariableValueToObject(mojo, "attach", false);
         mojo.execute();
 
         // A second format in the same build must not regenerate the javadoc

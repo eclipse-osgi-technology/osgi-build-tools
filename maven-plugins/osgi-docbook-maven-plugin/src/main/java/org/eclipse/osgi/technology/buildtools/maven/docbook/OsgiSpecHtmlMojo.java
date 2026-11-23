@@ -13,12 +13,10 @@ package org.eclipse.osgi.technology.buildtools.maven.docbook;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -71,19 +69,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
 
     /** Attach a zip of the HTML pages to the project with the classifier {@code specification-html} */
     @Parameter(property = "osgi.docbook.html.attach", defaultValue = "true")
-    boolean attachZip;
-
-    /**
-     * Link references to chapters and packages that are not part of this
-     * specification to their published pages. When false they are rendered as
-     * plain text.
-     */
-    @Parameter(property = "osgi.docbook.html.externalLinks", defaultValue = "true")
-    boolean externalLinks;
-
-    /** The URL that the paths in the external link index are relative to */
-    @Parameter(property = "osgi.docbook.html.externalLinkBaseUrl", defaultValue = "https://docs.osgi.org/specification/")
-    String externalLinkBaseUrl;
+    boolean attach;
 
     /**
      * The file name of the page with the title and the table of contents. The
@@ -108,10 +94,6 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     @Parameter(property = "osgi.docbook.html.rasterizeImages", defaultValue = "false")
     boolean rasterizeImages;
 
-    /** An external link index to use instead of the bundled one */
-    @Parameter(property = "osgi.docbook.html.externalLinkIndex")
-    File externalLinkIndex;
-
     @Override
     String formatName() {
         return "html";
@@ -120,18 +102,6 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
     @Override
     boolean isSkipped() {
         return skip;
-    }
-
-    @Override
-    URL linkIndex() throws MojoExecutionException {
-        if (externalLinkIndex == null) {
-            return super.linkIndex();
-        }
-        try {
-            return externalLinkIndex.toPath().toAbsolutePath().toUri().toURL();
-        } catch (MalformedURLException e) {
-            throw new MojoExecutionException("Not a link index: " + externalLinkIndex, e);
-        }
     }
 
     @Override
@@ -145,7 +115,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
         copyImages(book, htmlDir);
         copyStaticResources(htmlDir);
 
-        if (attachZip) {
+        if (attach) {
             Path zip = baseDir.resolve(project.getBuild().getDirectory())
                     .resolve(outputFileBaseName + "-html.zip");
             zip(htmlDir, zip);
@@ -174,7 +144,7 @@ public class OsgiSpecHtmlMojo extends AbstractOsgiSpecMojo {
             imageParameters(transformer);
             transformer.setParameter("draft.mode", draftMode);
             transformer.setParameter("chunker.output.encoding", "UTF-8");
-            externalLinks(transformer, externalLinks, externalLinkIndex, externalLinkBaseUrl);
+            externalLinks(transformer, externalLinks);
 
             StreamResult result = new StreamResult(mainOutput.toFile());
             result.setSystemId(mainOutput.toUri().toString());

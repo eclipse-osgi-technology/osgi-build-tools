@@ -1,24 +1,18 @@
 /*******************************************************************************
- * Copyright (c) Contributors to the Eclipse Foundation
+ * Copyright (c) 2026 Contributors to the Eclipse Foundation.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Contributors:
  *******************************************************************************/
 package org.eclipse.osgi.technology.buildtools.maven.docbook;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,12 +24,9 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -54,19 +45,15 @@ import net.sf.saxon.lib.FeatureKeys;
  * the docbook goal ran before in the same build, its archive is rendered: all
  * chapters of the project in one book.
  */
-public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
+public abstract class AbstractOsgiSpecMojo extends AbstractSpecMojo {
 
     /** The bundled index of chapters and packages published on docs.osgi.org, relative to the style sheets */
     private static final String LINK_INDEX = "../links/osgi-spec-index.xml";
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOsgiSpecMojo.class);
 
-    /** The DocBook source of the chapter, relative to the project base directory */
-    @Parameter(property = "osgi.docbook.spec.source", defaultValue = "src/main/resources/spec/spec.xml")
-    String chapterSource;
-
     /** The title of the specification, used when a single chapter is built; not used for a book */
-    @Parameter(property = "osgi.docbook.spec.title", defaultValue = "${project.name}")
+    @Parameter(property = "osgi.docbook.specTitle", defaultValue = "${project.name}")
     String specTitle;
 
     /**
@@ -77,7 +64,7 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
      * one directory, so the includes of the book are paths relative to that
      * directory, e.g. {@code chapters/service.cm/service.cm.xml}.
      */
-    @Parameter(property = "osgi.docbook.book.source")
+    @Parameter(property = "osgi.docbook.bookSource")
     File bookSource;
 
     /**
@@ -89,34 +76,29 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
      * the book, {@code docbookFallback/<artifactId>/<version>}, such as the
      * DocBook of a release that was never deployed.
      */
-    @Parameter
+    @Parameter(property = "osgi.docbook.docbooks")
     List<String> docbooks;
 
     /** The unpacked DocBook archives of the book, see {@code docbooks} */
-    @Parameter(defaultValue = "${project.basedir}/src/main/docbook")
+    @Parameter(property = "osgi.docbook.docbookFallback", defaultValue = "${project.basedir}/src/main/docbook")
     File docbookFallback;
 
     /**
      * {@code yes} for a draft (watermark, remarks, draft content), {@code no}
      * for a final specification; by default a {@code -SNAPSHOT} is a draft.
      */
-    @Parameter(property = "osgi.docbook.draft")
+    @Parameter(property = "osgi.docbook.draftMode")
     String draftMode;
 
     /** The years of the copyright line, e.g. {@code 2000, 2022}; by default those of the book */
-    @Parameter(property = "osgi.docbook.copyright.year")
+    @Parameter(property = "osgi.docbook.copyrightYear")
     String copyrightYear;
 
     /**
-     * The sources of the API to document, e.g. {@code ../api/src/main/java}
-     * for a specification module next to the API module. Roots that do not
-     * exist are ignored; without any, the compile source roots are documented.
+     * The release shown in the HTML page titles, e.g. {@code 8}. The PDF does
+     * not show it.
      */
-    @Parameter
-    List<File> apiSourceRoots;
-
-    /** The release shown in the HTML page titles, e.g. {@code 8} */
-    @Parameter(property = "osgi.docbook.release.version", defaultValue = "${project.version}")
+    @Parameter(property = "osgi.docbook.releaseVersion", defaultValue = "${project.version}")
     String releaseVersion;
 
     /**
@@ -130,11 +112,21 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
     @Parameter(property = "osgi.docbook.failOnUnresolvedLinks")
     Boolean failOnUnresolvedLinks;
 
-    @Inject
-    MavenProject project;
+    /**
+     * Link references to chapters and packages that are not part of this
+     * specification to their published pages. When false they are rendered as
+     * plain text.
+     */
+    @Parameter(property = "osgi.docbook.externalLinks", defaultValue = "true")
+    boolean externalLinks;
 
-    @Inject
-    MavenProjectHelper helper;
+    /** The URL that the paths in the external link index are relative to */
+    @Parameter(property = "osgi.docbook.externalLinkBaseUrl", defaultValue = "https://docs.osgi.org/specification/")
+    String externalLinkBaseUrl;
+
+    /** An external link index to use instead of the bundled one */
+    @Parameter(property = "osgi.docbook.externalLinkIndex")
+    File externalLinkIndex;
 
     @Inject
     RepositorySystem repositorySystem;
@@ -221,6 +213,13 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
      * @throws MojoExecutionException
      */
     URL linkIndex() throws MojoExecutionException {
+        if (externalLinkIndex != null) {
+            try {
+                return externalLinkIndex.toPath().toAbsolutePath().toUri().toURL();
+            } catch (MalformedURLException e) {
+                throw new MojoExecutionException("Not a link index: " + externalLinkIndex, e);
+            }
+        }
         URL index = AbstractOsgiSpecMojo.class.getResource(UnresolvedLinks.INDEX);
         if (index == null) {
             throw new MojoExecutionException("Missing plugin resource " + UnresolvedLinks.INDEX);
@@ -234,14 +233,12 @@ public abstract class AbstractOsgiSpecMojo extends AbstractMojo {
      *
      * @param transformer the transformer of the style sheet
      * @param enabled false to leave such references as text
-     * @param index an index to use instead of the bundled one
-     * @param baseUrl the URL that the paths of the index are relative to
      */
-    void externalLinks(Transformer transformer, boolean enabled, File index, String baseUrl) {
+    void externalLinks(Transformer transformer, boolean enabled) {
         if (enabled) {
-            transformer.setParameter("external.links.index",
-                    index != null ? index.toPath().toAbsolutePath().toUri().toString() : LINK_INDEX);
-            transformer.setParameter("external.links.base", baseUrl);
+            transformer.setParameter("external.links.index", externalLinkIndex != null
+                    ? externalLinkIndex.toPath().toAbsolutePath().toUri().toString() : LINK_INDEX);
+            transformer.setParameter("external.links.base", externalLinkBaseUrl);
         }
     }
 

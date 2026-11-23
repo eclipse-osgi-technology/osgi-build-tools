@@ -72,6 +72,17 @@ class DocbookArchiveTest {
     @Test
     @InjectMojo(goal = "docbook")
     @Basedir("/test-projects/repo/spec")
+    public void testNotAttached(OsgiSpecDocbookMojo docbook) throws Exception {
+        MavenProject project = project(docbook);
+        MojoExtension.setVariableValueToObject(docbook, "attach", false);
+        docbook.execute();
+
+        assertTrue(project.getAttachedArtifacts().isEmpty(), "The DocBook archive was attached");
+    }
+
+    @Test
+    @InjectMojo(goal = "docbook")
+    @Basedir("/test-projects/repo/spec")
     public void testArchive(OsgiSpecDocbookMojo docbook) throws Exception {
         MavenProject project = project(docbook);
         docbook.execute();
